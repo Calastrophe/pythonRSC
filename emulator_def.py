@@ -23,7 +23,6 @@ class InstructionSet(Enum):
 class Registers():
     def __init__(self):
         self.reg_map = {
-            "b0" : BitVector(intVal= 0x0, size=1),
             "s" : BitVector(intVal= 0x0, size=1),
             "z" : BitVector(intVal= 0x0, size=1),
             "ir" : BitVector(intVal= 0x0, size=32),
