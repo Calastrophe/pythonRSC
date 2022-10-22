@@ -103,9 +103,6 @@ class RSC():
             case InstructionSet.NOT.value:
                 self.instr.instr_not()
                 return 
-            case InstructionSet.BREAKPOINT.value:
-                self.instr.instr_breakpoint()
-                return
             case _:
                 raise Exception
 
