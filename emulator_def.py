@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import List
-from BitVector import BitVector # Absolutely horrible library, horrible, horrible, horrible.
+from BitVector import BitVector
 
 class InstructionSet(Enum):
-    HALT = '0x0'
+    HALT = '0x0' ## This is being used as a 'breakpoint' in the emulator.
     LDAC = '0x1'
     STAC = '0x2'
     MVAC = '0x3'
@@ -23,6 +23,7 @@ class InstructionSet(Enum):
 class Registers():
     def __init__(self):
         self.reg_map = {
+            "b0" : BitVector(intVal= 0x0, size=1),
             "s" : BitVector(intVal= 0x0, size=1),
             "z" : BitVector(intVal= 0x0, size=1),
             "ir" : BitVector(intVal= 0x0, size=32),
@@ -34,6 +35,10 @@ class Registers():
             "r" : BitVector(intVal = 0x0, size=32)
         }
     
+    def __getitem__(self, index) -> BitVector:
+        if index in self.reg_map:
+            return self.reg_map[index]
+
     def write_reg(self, reg:str, num:int):
         if reg in self.reg_map:
             self.reg_map[reg].set_value(intVal = num, size=self.reg_map[reg].size)
@@ -58,53 +63,68 @@ class InstructionDef():
         self.mem = mem
 
     def instr_not(self):
-        self.regs.reg_map["acc"] = ~self.regs.reg_map["acc"]
+        self.regs["acc"] = ~self.regs.reg_map["acc"]
+        self.increment_pc()
     
     def instr_shr(self):
-        self.regs.reg_map["acc"].shift_right_by_one()
+        self.regs["acc"].shift_right_by_one()
+        self.increment_pc()
     
     def instr_or(self):
-        self.regs.reg_map["acc"] = self.regs.reg_map["acc"] | self.regs.reg_map["r"]
+        self.regs["acc"] = self.regs["acc"] | self.regs["r"]
+        self.increment_pc()
     
     def instr_and(self):
-        self.regs.reg_map["acc"] = self.regs.reg_map["acc"] & self.regs.reg_map["r"]
+        self.regs["acc"] = self.regs["acc"] & self.regs["r"]
+        self.increment_pc()
 
     def instr_clac(self):
-        self.regs.reg_map["acc"].set_value(intVal=0x0, size=32)
+        self.regs["acc"].set_value(intVal=0x0, size=32)
+        self.increment_pc()
     
     def instr_inc(self):
-        self.regs.reg_map["acc"].set_value(intVal=self.regs.reg_map["acc"].int_val()+1, size=32)
+        self.regs["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
+        self.increment_pc()
 
     def instr_add(self):
-        self.regs.reg_map["acc"] += self.regs.reg_map["r"]
+        self.regs["acc"] += self.regs["r"]
+        self.increment_pc()
 
     def instr_sub(self):
-        self.regs.reg_map["acc"] -= self.regs.reg_map["r"]
+        self.regs["acc"] -= self.regs["r"]
+        self.increment_pc()
     
     def instr_out(self):
-        self.regs.reg_map["outr"] = self.regs.reg_map["acc"].deep_copy()
+        self.regs["outr"] = self.regs["acc"].deep_copy()
+        self.increment_pc()
     
     def instr_jmpz(self, operand):
         if int(self.regs.read_reg("z")):
-            self.regs.reg_map["pc"].set_value(intVal=operand, size=32)
+            self.regs["pc"].set_value(intVal=operand, size=32)
+        self.increment_pc()
 
     def instr_jmp(self, operand):
-        self.regs.reg_map["pc"].set_value(intVal=operand, size=32)
+        self.regs["pc"].set_value(intVal=operand, size=32)
+        self.increment_pc()
     
     def instr_movr(self):
-        self.regs.reg_map["acc"] = self.regs.reg_map["r"].deep_copy()
+        self.regs["acc"] = self.regs["r"].deep_copy()
+        self.increment_pc()
     
     def instr_mvac(self):
-        self.regs.reg_map["r"] = self.regs.reg_map["acc"].deep_copy()
+        self.regs["r"] = self.regs["acc"].deep_copy()
+        self.increment_pc()
     
     def instr_stac(self, operand):
-        self.mem.write(operand, self.regs.reg_map["acc"].deep_copy())
+        self.mem.write(operand, self.regs["acc"].deep_copy())
+        self.increment_pc()
     
     def instr_ldac(self, operand):
-        self.regs.reg_map["acc"] = self.mem.read(operand).deep_copy()
+        self.regs["acc"] = self.mem.read(operand).deep_copy()
+        self.increment_pc()
 
     def instr_halt(self):
-        self.regs.reg_map["s"].set_value(intVal=0x1, size=1)
+        self.regs["s"].set_value(intVal=0x1, size=1)
 
     def increment_pc(self):
-        self.regs.reg_map["pc"].set_value(intVal=self.regs.reg_map["pc"].int_val()+1, size=32)
+        self.regs["pc"].set_value(intVal=self.regs["pc"].int_val()+1, size=32)

@@ -24,65 +24,88 @@ class RSC():
     def run(self):
         #Starts the emulation
         while (self._running):
-            if self.check():
-                break
+            if self.halted() | self.debugger():
+                break  
             instr = self.fetch()
+            match instr:
+                case InstructionSet.JMPZ.value | InstructionSet.JMP.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
+                    self.instr.increment_pc()
+                    operand = self.fetch()
+                case _:
+                    pass
             self.decode_execute_tick(instr)
         return
 
-    def check(self):
+    def halted(self):
         return self.regs.read_reg("s").int_val()
 
-    def breakpoint(self):
-        #Insert a breakpoint at a given "address"
-        return
+    def debugger(self): ## Implement
+        return 0
+
+    # def set_breakpoint(self, index):
+    #     if len(self._instructions-1 >= index > 0):
+    #         self._instructions[index] = InstructionSet.BREAKPOINT.value
+    #     else:
+    #         print("You attempted to insert a breakpoint on an invalid instruction location.")
+    #     return
 
     def fetch(self):
         return self._instructions[self.regs.read_reg("pc").int_val()]
     
-    def decode_execute_tick(self, instr):
+    def decode_execute_tick(self, instr, operand=None):
         print(instr)
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()
                 return
-            case InstructionSet.LDAC.value: # These instr's have not been tested
-                self.instr.instr_ldac()
+            case InstructionSet.LDAC.value:
+                self.instr.instr_ldac(operand)
                 return
             case InstructionSet.STAC.value:
-                self.instr.instr_stac()
+                self.instr.instr_stac(operand)
                 return
             case InstructionSet.MVAC.value:
                 self.instr.instr_mvac()
                 return
             case InstructionSet.MOVR.value:
+                self.instr.instr_movr()
                 return
             case InstructionSet.JMP.value:
+                self.instr.instr_jmp(operand)
                 return
             case InstructionSet.JMPZ.value:
+                self.instr.instr_jmp(operand)
                 return
             case InstructionSet.OUT.value:
+                self.instr.instr_out()
                 return
             case InstructionSet.SUB.value:
+                self.instr.instr_sub()
                 return
             case InstructionSet.ADD.value:
                 self.instr.instr_add()
-                self.instr.increment_pc()
                 return
             case InstructionSet.INC.value:
                 self.instr.instr_inc()
-                self.instr.increment_pc()
                 return
             case InstructionSet.CLAC.value:
+                self.instr.instr_clac()
                 return
             case InstructionSet.AND.value:
+                self.instr.instr_and()
                 return
             case InstructionSet.OR.value:
+                self.instr.instr_or()
                 return
             case InstructionSet.ASHR.value:
+                self.instr.instr_shr()
                 return
             case InstructionSet.NOT.value:
-               return 
+                self.instr.instr_not()
+                return 
+            case InstructionSet.BREAKPOINT.value:
+                self.instr.instr_breakpoint()
+                return
             case _:
                 raise Exception
 
