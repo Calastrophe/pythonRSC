@@ -24,7 +24,7 @@ class RSC():
     def run(self):
         #Starts the emulation
         while (self._running):
-            if self.halted() | self.debugger():
+            if self.halted():
                 break  
             instr = self.fetch()
             match instr:
@@ -39,9 +39,7 @@ class RSC():
     def halted(self):
         return self.regs.read_reg("s").int_val()
 
-    def debugger(self): ## Implement
-        return 0
-
+    # TODO: Implement a debugger with breakpoints, with a nice command line interface.
     # def set_breakpoint(self, index):
     #     if len(self._instructions-1 >= index > 0):
     #         self._instructions[index] = InstructionSet.BREAKPOINT.value
