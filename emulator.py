@@ -27,17 +27,19 @@ class RSC():
             if self.halted():
                 break  
             instr = self.fetch()
+            operand = None
             match instr:
                 case InstructionSet.JMPZ.value | InstructionSet.JMP.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
-                    self.instr.increment_pc()
+                    self.instr.next_ir()
                     operand = self.fetch()
                 case _:
                     pass
-            self.decode_execute_tick(instr)
+            self.decode_execute_tick(instr, operand)
+        self.state()
         return
 
     def halted(self):
-        return self.regs.read_reg("s").int_val()
+        return self.regs.read_reg("s")
 
     # TODO: Implement a debugger with breakpoints, with a nice command line interface.
     # def set_breakpoint(self, index):
@@ -48,8 +50,12 @@ class RSC():
     #     return
 
     def fetch(self):
-        return self._instructions[self.regs.read_reg("pc").int_val()]
-    
+        return self._instructions[self.regs.read_reg("ir")]
+
+    def state(self):
+        for reg_tuple in self.regs.read_all_regs():
+            print(reg_tuple)
+
     def decode_execute_tick(self, instr, operand=None):
         print(instr)
         match instr:

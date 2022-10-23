@@ -28,7 +28,7 @@ class Registers():
             "ir" : BitVector(intVal= 0x0, size=32),
             "ar" : BitVector(intVal= 0x0, size=32),
             "dr" : BitVector(intVal= 0x0, size=32),
-            "pc" : BitVector(intVal = 0x0, size=32),
+            "pc" : BitVector(intVal = 0x1, size=32),
             "outr" : BitVector(intVal = 0x0, size=32),
             "acc" : BitVector(intVal = 0x0, size=32),
             "r" : BitVector(intVal = 0x0, size=32)
@@ -42,9 +42,14 @@ class Registers():
         if reg in self.reg_map:
             self.reg_map[reg].set_value(intVal = num, size=self.reg_map[reg].size)
 
-    def read_reg(self, reg:str) -> BitVector:
+    def read_reg(self, reg:str) -> int:
         if reg in self.reg_map:
-            return self.reg_map[reg]
+            return self.reg_map[reg].int_val()
+        
+    def read_all_regs(self):
+        for reg in self.reg_map:
+            yield (reg, self.reg_map[reg].int_val())
+
 
 class Memory():
     def __init__(self):
@@ -63,63 +68,78 @@ class InstructionDef():
 
     def instr_not(self):
         self.regs["acc"] = ~self.regs.reg_map["acc"]
+        self.next_ir()
         self.increment_pc()
     
     def instr_shr(self):
         self.regs["acc"].shift_right_by_one()
+        self.next_ir()
         self.increment_pc()
     
     def instr_or(self):
         self.regs["acc"] = self.regs["acc"] | self.regs["r"]
+        self.next_ir()
         self.increment_pc()
     
     def instr_and(self):
         self.regs["acc"] = self.regs["acc"] & self.regs["r"]
+        self.next_ir()
         self.increment_pc()
 
     def instr_clac(self):
         self.regs["acc"].set_value(intVal=0x0, size=32)
+        self.next_ir()
         self.increment_pc()
     
     def instr_inc(self):
         self.regs["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
+        self.next_ir()
         self.increment_pc()
 
     def instr_add(self):
         self.regs["acc"] += self.regs["r"]
+        self.next_ir()
         self.increment_pc()
 
     def instr_sub(self):
         self.regs["acc"] -= self.regs["r"]
+        self.next_ir()
         self.increment_pc()
     
     def instr_out(self):
         self.regs["outr"] = self.regs["acc"].deep_copy()
+        self.next_ir()
         self.increment_pc()
     
     def instr_jmpz(self, operand):
-        if int(self.regs.read_reg("z")):
-            self.regs["pc"].set_value(intVal=operand, size=32)
+        if self.regs.read_reg("z"):
+            self.set_pc(operand)
+        self.next_ir()
         self.increment_pc()
 
     def instr_jmp(self, operand):
-        self.regs["pc"].set_value(intVal=operand, size=32)
+        self.set_pc(operand)
+        self.next_ir()
         self.increment_pc()
     
     def instr_movr(self):
         self.regs["acc"] = self.regs["r"].deep_copy()
+        self.next_ir()
         self.increment_pc()
     
     def instr_mvac(self):
         self.regs["r"] = self.regs["acc"].deep_copy()
+        self.next_ir()
         self.increment_pc()
     
     def instr_stac(self, operand):
         self.mem.write(operand, self.regs["acc"].deep_copy())
+        self.next_ir()
         self.increment_pc()
     
     def instr_ldac(self, operand):
         self.regs["acc"] = self.mem.read(operand).deep_copy()
+        self.next_ir()
         self.increment_pc()
 
     def instr_halt(self):
@@ -127,3 +147,14 @@ class InstructionDef():
 
     def increment_pc(self):
         self.regs["pc"].set_value(intVal=self.regs["pc"].int_val()+1, size=32)
+
+    def next_ir(self):
+        self.regs["ir"].set_value(intVal=self.regs.read_reg("pc"), size=32)
+
+    def set_pc(self, addr:int):
+        self.regs["pc"].set_value(intVal=addr, size=32)
+
+    def set_ir(self, addr:int):
+        self.regs["ir"].set_value(intVal=addr, size=32)
+
+    
