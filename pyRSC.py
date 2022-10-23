@@ -1,5 +1,5 @@
 from typing import List
-from emulator_def import InstructionSet, Registers, InstructionDef, Memory
+from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
 
 class RSC():
     def __init__(self, fn:str, decoded:bool):
@@ -18,7 +18,7 @@ class RSC():
                 self._instructions = [hex(int(line[i:i+32], 2)) for i in range(0, len(line), 32)]
             return
         else:
-            #Parse the file from given source, create instructions
+            # TODO: Create an assembler to parse microcode and construct binary for us.
             return
 
     def run(self):
@@ -31,11 +31,12 @@ class RSC():
             match instr:
                 case InstructionSet.JMPZ.value | InstructionSet.JMP.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
                     self.instr.next_ir()
-                    operand = self.fetch()
+                    operand = int(self.fetch(), base=16)
                 case _:
                     pass
+            self.instr.check_z()
             self.decode_execute_tick(instr, operand)
-        self.state()
+        self.state() # It will print the resultant state of the emulator.
         return
 
     def halted(self):
@@ -56,8 +57,9 @@ class RSC():
         for reg_tuple in self.regs.read_all_regs():
             print(reg_tuple)
 
+    # This will decode the instruction, execute it, and tick the IR and PC.
     def decode_execute_tick(self, instr, operand=None):
-        print(instr)
+        print(f"The instruction {instr} was executed.")
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()
@@ -111,6 +113,6 @@ class RSC():
                 raise Exception
 
 if __name__ == "__main__":
-    rsc = RSC("instr.txt", True)
+    rsc = RSC("clear&out_test.txt", True)
     rsc.parse()
     rsc.run()

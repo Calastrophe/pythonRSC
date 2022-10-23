@@ -2,8 +2,11 @@ from enum import Enum
 from typing import List
 from BitVector import BitVector
 
+
+
+# This is the instruction set of the RSC.
 class InstructionSet(Enum):
-    HALT = '0x0' ## This is being used as a 'breakpoint' in the emulator.
+    HALT = '0x0'
     LDAC = '0x1'
     STAC = '0x2'
     MVAC = '0x3'
@@ -20,6 +23,9 @@ class InstructionSet(Enum):
     ASHR = '0xe'
     NOT = '0xf'
 
+
+
+# These are the registers of the RSC and their associated functions.
 class Registers():
     def __init__(self):
         self.reg_map = {
@@ -51,6 +57,8 @@ class Registers():
             yield (reg, self.reg_map[reg].int_val())
 
 
+
+# The RAM of the RSC.
 class Memory():
     def __init__(self):
         self.memory_map = {}
@@ -61,53 +69,56 @@ class Memory():
     def read(self, addr:int) -> BitVector:
         return self.memory_map[addr]
 
+
+
+# Instruction declaration and definition
 class InstructionDef():
     def __init__(self, regs: Registers, mem: Memory):
         self.regs = regs
         self.mem = mem
 
     def instr_not(self):
-        self.regs["acc"] = ~self.regs.reg_map["acc"]
+        self.regs.reg_map["acc"] = ~self.regs.reg_map["acc"]
         self.next_ir()
         self.increment_pc()
     
     def instr_shr(self):
-        self.regs["acc"].shift_right_by_one()
+        self.regs.reg_map["acc"].shift_right_by_one()
         self.next_ir()
         self.increment_pc()
     
     def instr_or(self):
-        self.regs["acc"] = self.regs["acc"] | self.regs["r"]
+        self.regs.reg_map["acc"] = self.regs.reg_map["acc"] | self.regs.reg_map["r"]
         self.next_ir()
         self.increment_pc()
     
     def instr_and(self):
-        self.regs["acc"] = self.regs["acc"] & self.regs["r"]
+        self.regs.reg_map["acc"] = self.regs.reg_map["acc"] & self.regs.reg_map["r"]
         self.next_ir()
         self.increment_pc()
 
     def instr_clac(self):
-        self.regs["acc"].set_value(intVal=0x0, size=32)
+        self.regs.reg_map["acc"].set_value(intVal=0x0, size=32)
         self.next_ir()
         self.increment_pc()
     
     def instr_inc(self):
-        self.regs["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
+        self.regs.reg_map["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
         self.next_ir()
         self.increment_pc()
 
     def instr_add(self):
-        self.regs["acc"] += self.regs["r"]
+        self.regs.reg_map["acc"] += self.regs.reg_map["r"]
         self.next_ir()
         self.increment_pc()
 
     def instr_sub(self):
-        self.regs["acc"] -= self.regs["r"]
+        self.regs.reg_map["acc"] -= self.regs.reg_map["r"]
         self.next_ir()
         self.increment_pc()
     
     def instr_out(self):
-        self.regs["outr"] = self.regs["acc"].deep_copy()
+        self.regs.reg_map["outr"] = self.regs.reg_map["acc"].deep_copy()
         self.next_ir()
         self.increment_pc()
     
@@ -123,22 +134,22 @@ class InstructionDef():
         self.increment_pc()
     
     def instr_movr(self):
-        self.regs["acc"] = self.regs["r"].deep_copy()
+        self.regs.reg_map["acc"] = self.regs.reg_map["r"].deep_copy()
         self.next_ir()
         self.increment_pc()
     
     def instr_mvac(self):
-        self.regs["r"] = self.regs["acc"].deep_copy()
+        self.regs.reg_map["r"] = self.regs.reg_map["acc"].deep_copy()
         self.next_ir()
         self.increment_pc()
     
     def instr_stac(self, operand):
-        self.mem.write(operand, self.regs["acc"].deep_copy())
+        self.mem.write(operand, self.regs.reg_map["acc"].deep_copy())
         self.next_ir()
         self.increment_pc()
     
     def instr_ldac(self, operand):
-        self.regs["acc"] = self.mem.read(operand).deep_copy()
+        self.regs.reg_map["acc"] = self.mem.read(operand).deep_copy()
         self.next_ir()
         self.increment_pc()
 
@@ -156,5 +167,11 @@ class InstructionDef():
 
     def set_ir(self, addr:int):
         self.regs["ir"].set_value(intVal=addr, size=32)
+
+    def check_z(self):
+        if self.regs.read_reg("acc") == 0:
+            self.regs.reg_map["z"].set_value(intVal=1, size=1)
+        else:
+            self.regs.reg_map["z"].set_value(intVal=0, size=1)
 
     
