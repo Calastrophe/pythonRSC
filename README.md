@@ -2,6 +2,9 @@
 
 pyRSC is an emulator for the RSC architecture.
 
+There is a dependency on BitVector.
+To download BitVector's package, just use **pip install BitVector**
+
 To use this, simply download the files and store them in a folder.
 Play around with the example and construct your own tests.
 
