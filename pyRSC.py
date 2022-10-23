@@ -112,7 +112,9 @@ class RSC():
             case _:
                 raise Exception
 
-if __name__ == "__main__":
-    rsc = RSC("clear&out_test.txt", True)
-    rsc.parse()
-    rsc.run()
+
+# You can uncomment this to directly test without having to use the library.
+# if __name__ == "__main__":
+#     rsc = RSC("clear&out_test.txt", True)
+#     rsc.parse()
+#     rsc.run()
