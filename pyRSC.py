@@ -2,7 +2,7 @@ from typing import List
 from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
 
 class RSC():
-    def __init__(self, fn:str, decoded:bool):
+    def __init__(self, fn:str, decoded:bool=True):
         self.file = fn
         self.decoded = decoded
         self.regs = Registers()
