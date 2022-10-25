@@ -29,13 +29,21 @@ class RSC():
             instr = self.fetch()
             operand = None
             match instr:
-                case InstructionSet.JMPZ.value | InstructionSet.JMP.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
+                case InstructionSet.JMPZ.value | InstructionSet.JMP.value:
                     self.instr.next_ir()
+                    self.instr.increment_pc()
                     operand = int(self.fetch(), base=16)
+                case InstructionSet.LDAC.value | InstructionSet.STAC.value:
+                    self.instr.next_ir()
+                    self.instr.increment_pc()
+                    operand = int(self.fetch(), base=16)
+                    self.instr.next_ir()
+                    self.instr.increment_pc()
                 case _:
-                    pass
+                    self.instr.next_ir()
+                    self.instr.increment_pc()
             self.instr.check_z()
-            self.decode_execute_tick(instr, operand)
+            self.execute(instr, operand)
         self.state() # It will print the resultant state of the emulator.
         return
 
@@ -58,8 +66,11 @@ class RSC():
             print(reg_tuple)
 
     # This will decode the instruction, execute it, and tick the IR and PC.
-    def decode_execute_tick(self, instr, operand=None):
-        print(f"The instruction {instr} was executed.")
+    def execute(self, instr, operand=None):
+        if operand is not None:
+            print(f"The instruction {instr} was executed with address {operand} as target.")
+        else:
+            print(f"The instruction {instr} was executed.")
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()
@@ -110,6 +121,8 @@ class RSC():
                 self.instr.instr_not()
                 return 
             case _:
+                print(f"There was an attempt to match {instr} but it failed...")
+                self.state()
                 raise Exception
 
 
