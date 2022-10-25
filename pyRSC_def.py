@@ -79,79 +79,68 @@ class InstructionDef():
 
     def instr_not(self):
         self.regs.reg_map["acc"] = ~self.regs.reg_map["acc"]
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_shr(self):
         self.regs.reg_map["acc"].shift_right_by_one()
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_or(self):
         self.regs.reg_map["acc"] = self.regs.reg_map["acc"] | self.regs.reg_map["r"]
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_and(self):
         self.regs.reg_map["acc"] = self.regs.reg_map["acc"] & self.regs.reg_map["r"]
-        self.next_ir()
-        self.increment_pc()
+
 
     def instr_clac(self):
         self.regs.reg_map["acc"].set_value(intVal=0x0, size=32)
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_inc(self):
         self.regs.reg_map["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
-        self.next_ir()
-        self.increment_pc()
+
 
     def instr_add(self):
         self.regs.reg_map["acc"] += self.regs.reg_map["r"]
-        self.next_ir()
-        self.increment_pc()
+
 
     def instr_sub(self):
         self.regs.reg_map["acc"] -= self.regs.reg_map["r"]
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_out(self):
         self.regs.reg_map["outr"] = self.regs.reg_map["acc"].deep_copy()
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_jmpz(self, operand):
         if self.regs.read_reg("z"):
-            self.set_pc(operand)
-        self.next_ir()
-        self.increment_pc()
+            self.set_ir(operand)
+            self.set_pc(operand+1)
+        else:
+            self.next_ir()
+            self.increment_pc()
+
 
     def instr_jmp(self, operand):
-        self.set_pc(operand)
-        self.next_ir()
-        self.increment_pc()
+        self.set_ir(operand)
+        self.set_pc(operand+1)
+
     
     def instr_movr(self):
         self.regs.reg_map["acc"] = self.regs.reg_map["r"].deep_copy()
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_mvac(self):
         self.regs.reg_map["r"] = self.regs.reg_map["acc"].deep_copy()
-        self.next_ir()
-        self.increment_pc()
+
     
     def instr_stac(self, operand):
         self.mem.write(operand, self.regs.reg_map["acc"].deep_copy())
-        self.next_ir()
-        self.increment_pc()
     
     def instr_ldac(self, operand):
         self.regs.reg_map["acc"] = self.mem.read(operand).deep_copy()
-        self.next_ir()
-        self.increment_pc()
+
 
     def instr_halt(self):
         self.regs["s"].set_value(intVal=0x1, size=1)
