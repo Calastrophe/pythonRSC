@@ -115,16 +115,16 @@ class InstructionDef():
     
     def instr_jmpz(self, operand):
         if self.regs.read_reg("z"):
-            self.set_ir(operand)
-            self.set_pc(operand+1)
+            self.set_ir(self.regs.read_reg("dr"))
+            self.set_pc(self.regs.read_reg("dr")+1)
         else:
             self.next_ir()
             self.increment_pc()
 
 
-    def instr_jmp(self, operand):
-        self.set_ir(operand)
-        self.set_pc(operand+1)
+    def instr_jmp(self):
+        self.set_ir(self.regs.read_reg("dr"))
+        self.set_pc(self.regs.read_reg("dr")+1)
 
     
     def instr_movr(self):
@@ -135,11 +135,11 @@ class InstructionDef():
         self.regs.reg_map["r"] = self.regs.reg_map["acc"].deep_copy()
 
     
-    def instr_stac(self, operand):
-        self.mem.write(operand, self.regs.reg_map["acc"].deep_copy())
+    def instr_stac(self):
+        self.mem.write(self.regs.read_reg("dr"), self.regs.reg_map["acc"].deep_copy())
     
-    def instr_ldac(self, operand):
-        self.regs.reg_map["acc"] = self.mem.read(operand).deep_copy()
+    def instr_ldac(self):
+        self.regs.reg_map["acc"] = self.mem.read(self.regs.read_reg("dr")).deep_copy()
 
 
     def instr_halt(self):
