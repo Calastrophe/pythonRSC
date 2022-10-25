@@ -10,6 +10,7 @@ class RSC():
         self.instr = InstructionDef(regs=self.regs, mem=self.memory)
         self._instructions : List[str] = []
         self._running = True
+        self.parse()
     
     def parse(self):
         if self.decoded:
@@ -33,17 +34,19 @@ class RSC():
                     self.instr.next_ir()
                     self.instr.increment_pc()
                     operand = int(self.fetch(), base=16)
+                    self.regs.write_reg("dr", operand)
                 case InstructionSet.LDAC.value | InstructionSet.STAC.value:
                     self.instr.next_ir()
                     self.instr.increment_pc()
                     operand = int(self.fetch(), base=16)
+                    self.regs.write_reg("dr", operand)
                     self.instr.next_ir()
                     self.instr.increment_pc()
                 case _:
                     self.instr.next_ir()
                     self.instr.increment_pc()
             self.instr.check_z()
-            self.execute(instr, operand)
+            self.execute(instr)
         self.state() # It will print the resultant state of the emulator.
         return
 
@@ -66,20 +69,17 @@ class RSC():
             print(reg_tuple)
 
     # This will decode the instruction, execute it, and tick the IR and PC.
-    def execute(self, instr, operand=None):
-        if operand is not None:
-            print(f"The instruction {instr} was executed with address {operand} as target.")
-        else:
-            print(f"The instruction {instr} was executed.")
+    def execute(self, instr):
+        print(f"The instruction {instr} was executed.")
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()
                 return
             case InstructionSet.LDAC.value:
-                self.instr.instr_ldac(operand)
+                self.instr.instr_ldac()
                 return
             case InstructionSet.STAC.value:
-                self.instr.instr_stac(operand)
+                self.instr.instr_stac()
                 return
             case InstructionSet.MVAC.value:
                 self.instr.instr_mvac()
@@ -88,10 +88,10 @@ class RSC():
                 self.instr.instr_movr()
                 return
             case InstructionSet.JMP.value:
-                self.instr.instr_jmp(operand)
+                self.instr.instr_jmp()
                 return
             case InstructionSet.JMPZ.value:
-                self.instr.instr_jmp(operand)
+                self.instr.instr_jmp()
                 return
             case InstructionSet.OUT.value:
                 self.instr.instr_out()
