@@ -113,7 +113,7 @@ class InstructionDef():
         self.regs.reg_map["outr"] = self.regs.reg_map["acc"].deep_copy()
 
     
-    def instr_jmpz(self, operand):
+    def instr_jmpz(self):
         if self.regs.read_reg("z"):
             self.set_ir(self.regs.read_reg("dr"))
             self.set_pc(self.regs.read_reg("dr")+1)

@@ -28,7 +28,6 @@ class RSC():
             if self.halted():
                 break  
             instr = self.fetch()
-            operand = None
             match instr:
                 case InstructionSet.JMPZ.value | InstructionSet.JMP.value:
                     self.instr.next_ir()
