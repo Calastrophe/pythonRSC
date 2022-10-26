@@ -1,26 +1,17 @@
 from typing import List
-from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
+from pyRSC_def import InstructionSet, Registers, InstructionDef
+from pyRSC_assembler import Assembler
 
 class RSC():
     def __init__(self, fn:str, decoded:bool=True):
         self.file = fn
         self.decoded = decoded
         self.regs = Registers()
-        self.memory = Memory()
-        self.instr = InstructionDef(regs=self.regs, mem=self.memory)
-        self._instructions : List[str] = []
+        self._assembler = Assembler(fn)
+        self._instructions : List[str] = self._assembler.instructions
+        self._memory_layout = self._assembler.memory_layout
+        self.instr = InstructionDef(regs=self.regs, mem=self._memory_layout, instructions=self._instructions)
         self._running = True
-        self.parse()
-    
-    def parse(self):
-        if self.decoded:
-            with open(self.file, "r") as file:
-                line = file.read().strip().replace("\n", "")
-                self._instructions = [hex(int(line[i:i+32], 2)) for i in range(0, len(line), 32)]
-            return
-        else:
-            # TODO: Create an assembler to parse microcode and construct binary for us.
-            return
 
     def run(self):
         #Starts the emulation
@@ -67,7 +58,6 @@ class RSC():
         for reg_tuple in self.regs.read_all_regs():
             print(reg_tuple)
 
-    # This will decode the instruction, execute it, and tick the IR and PC.
     def execute(self, instr):
         print(f"The instruction {instr} was executed.")
         match instr:

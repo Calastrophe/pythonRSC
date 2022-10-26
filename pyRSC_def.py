@@ -57,25 +57,12 @@ class Registers():
             yield (reg, self.reg_map[reg].int_val())
 
 
-
-# The RAM of the RSC.
-class Memory():
-    def __init__(self):
-        self.memory_map = {}
-
-    def write(self, addr:int, num: BitVector):
-        self.memory_map.update({addr:num})
-    
-    def read(self, addr:int) -> BitVector:
-        return self.memory_map[addr]
-
-
-
 # Instruction declaration and definition
 class InstructionDef():
-    def __init__(self, regs: Registers, mem: Memory):
+    def __init__(self, regs: Registers, mem, instructions: List[str]):
         self.regs = regs
         self.mem = mem
+        self.instructions = instructions
 
     def instr_not(self):
         self.regs.reg_map["acc"] = ~self.regs.reg_map["acc"]
@@ -102,11 +89,13 @@ class InstructionDef():
 
 
     def instr_add(self):
-        self.regs.reg_map["acc"] += self.regs.reg_map["r"]
+        sum = self.regs.read_reg("acc") + self.regs.read_reg("r")
+        self.regs.reg_map["acc"].set_value(intVal=sum, size=32)
 
 
     def instr_sub(self):
-        self.regs.reg_map["acc"] -= self.regs.reg_map["r"]
+        sum = self.regs.read_reg("acc") - self.regs.read_reg("r")
+        self.regs.reg_map["acc"].set_value(intVal=sum, size=32)
 
     
     def instr_out(self):
@@ -136,11 +125,10 @@ class InstructionDef():
 
     
     def instr_stac(self):
-        self.mem.write(self.regs.read_reg("dr"), self.regs.reg_map["acc"].deep_copy())
+        self.mem.update({self.regs.read_reg("dr"): hex(self.regs.read_reg("acc"))})
     
     def instr_ldac(self):
-        self.regs.reg_map["acc"] = self.mem.read(self.regs.read_reg("dr")).deep_copy()
-
+        self.regs["acc"].set_value(intVal=int(self.mem[self.regs.read_reg("dr")],base=16),size=32)
 
     def instr_halt(self):
         self.regs["s"].set_value(intVal=0x1, size=1)
