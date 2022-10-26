@@ -12,4 +12,4 @@ Play around with the example and construct your own tests.
 
 
 
-There are plans for an assembler for the micro-code and is currently in development under microcode branch.
+The assembler is still being worked on.
