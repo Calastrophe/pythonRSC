@@ -4,7 +4,7 @@ JMP start
 
 var1: BE
 var2: 9E
-somevariable32: 3E
+somevariable32: 3E ;444
 
 start:
     LDAC var1 ;a stored variable
