@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, DefaultDict
 from BitVector import BitVector
 
 
@@ -34,7 +34,7 @@ class Registers():
             "ir" : BitVector(intVal= 0x0, size=32),
             "ar" : BitVector(intVal= 0x0, size=32),
             "dr" : BitVector(intVal= 0x0, size=32),
-            "pc" : BitVector(intVal = 0x1, size=32),
+            "pc" : BitVector(intVal = 0x0, size=32),
             "outr" : BitVector(intVal = 0x0, size=32),
             "acc" : BitVector(intVal = 0x0, size=32),
             "r" : BitVector(intVal = 0x0, size=32)
@@ -57,23 +57,9 @@ class Registers():
             yield (reg, self.reg_map[reg].int_val())
 
 
-
-# The RAM of the RSC.
-class Memory():
-    def __init__(self):
-        self.memory_map = {}
-
-    def write(self, addr:int, num: BitVector):
-        self.memory_map.update({addr:num})
-    
-    def read(self, addr:int) -> BitVector:
-        return self.memory_map[addr]
-
-
-
 # Instruction declaration and definition
 class InstructionDef():
-    def __init__(self, regs: Registers, mem: Memory):
+    def __init__(self, regs: Registers, mem: DefaultDict):
         self.regs = regs
         self.mem = mem
 
@@ -94,68 +80,67 @@ class InstructionDef():
 
 
     def instr_clac(self):
-        self.regs.reg_map["acc"].set_value(intVal=0x0, size=32)
+        self.regs.write_reg("acc", 0)
 
     
     def instr_inc(self):
-        self.regs.reg_map["acc"].set_value(intVal=self.regs["acc"].int_val()+1, size=32)
+        self.regs.write_reg("acc", self.regs.read_reg("acc")+1)
 
 
     def instr_add(self):
-        self.regs.reg_map["acc"] += self.regs.reg_map["r"]
+        sum = self.regs.read_reg("acc") + self.regs.read_reg("r")
+        self.regs.write_reg("acc", sum)
 
 
     def instr_sub(self):
-        self.regs.reg_map["acc"] -= self.regs.reg_map["r"]
-
+        sum = self.regs.read_reg("acc") - self.regs.read_reg("r")
+        self.regs.write_reg("acc", sum)
     
+
     def instr_out(self):
-        self.regs.reg_map["outr"] = self.regs.reg_map["acc"].deep_copy()
+        self.regs.write_reg("outr", self.regs.read_reg("acc"))
 
-    
+
     def instr_jmpz(self):
         if self.regs.read_reg("z"):
-            self.set_ir(self.regs.read_reg("dr"))
-            self.set_pc(self.regs.read_reg("dr")+1)
+            self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+            self.regs.write_reg("pc", self.regs.read_reg("dr"))
         else:
-            self.next_ir()
             self.increment_pc()
 
 
     def instr_jmp(self):
-        self.set_ir(self.regs.read_reg("dr"))
-        self.set_pc(self.regs.read_reg("dr")+1)
+        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("pc", self.regs.read_reg("dr"))
 
     
     def instr_movr(self):
-        self.regs.reg_map["acc"] = self.regs.reg_map["r"].deep_copy()
+        self.regs.write_reg("acc", self.regs.read_reg("r"))
 
     
     def instr_mvac(self):
-        self.regs.reg_map["r"] = self.regs.reg_map["acc"].deep_copy()
-
+        self.regs.write_reg("r", self.regs.read_reg("acc"))
     
+
     def instr_stac(self):
-        self.mem.write(self.regs.read_reg("dr"), self.regs.reg_map["acc"].deep_copy())
+        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16)) ## These need to be abstracted away.
+        self.increment_pc()
+        self.regs.write_reg("ar", self.regs.read_reg("dr"))
+        self.regs.write_reg("dr", self.regs.read_reg("acc"))
+        self.mem.update({self.regs.read_reg("ar"): hex(self.regs.read_reg("dr"))})
     
     def instr_ldac(self):
-        self.regs.reg_map["acc"] = self.mem.read(self.regs.read_reg("dr")).deep_copy()
-
+        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.increment_pc()
+        self.regs.write_reg("ar", self.regs.read_reg("dr"))
+        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("acc", self.regs.read_reg("dr"))
 
     def instr_halt(self):
         self.regs["s"].set_value(intVal=0x1, size=1)
 
     def increment_pc(self):
-        self.regs["pc"].set_value(intVal=self.regs["pc"].int_val()+1, size=32)
-
-    def next_ir(self):
-        self.regs["ir"].set_value(intVal=self.regs.read_reg("pc"), size=32)
-
-    def set_pc(self, addr:int):
-        self.regs["pc"].set_value(intVal=addr, size=32)
-
-    def set_ir(self, addr:int):
-        self.regs["ir"].set_value(intVal=addr, size=32)
+        self.regs.write_reg("pc", self.regs.read_reg("pc")+1)
 
     def check_z(self):
         if self.regs.read_reg("acc") == 0:

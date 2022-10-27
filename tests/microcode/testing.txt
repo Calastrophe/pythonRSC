@@ -1,0 +1,11 @@
+JMP new_label
+
+new_label:
+    INC
+    STAC 0x423
+    CLAC
+    JMP loader_label
+
+loader_label:
+    LDAC 0x423
+    HALT

@@ -1,73 +1,39 @@
 from typing import List
-from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
+from pyRSC_def import InstructionSet, Registers, InstructionDef
+from pyRSC_assembler import Assembler
 
 class RSC():
-    def __init__(self, fn:str, decoded:bool=True):
+    def __init__(self, fn:str):
         self.file = fn
-        self.decoded = decoded
         self.regs = Registers()
-        self.memory = Memory()
-        self.instr = InstructionDef(regs=self.regs, mem=self.memory)
-        self._instructions : List[str] = []
+        self.instructions = Assembler(fn).memory_layout # These instructions are just a memory layout of the program.
+        self.instr = InstructionDef(regs=self.regs, mem=self.instructions)
         self._running = True
-        self.parse()
-    
-    def parse(self):
-        if self.decoded:
-            with open(self.file, "r") as file:
-                line = file.read().strip().replace("\n", "")
-                self._instructions = [hex(int(line[i:i+32], 2)) for i in range(0, len(line), 32)]
-            return
-        else:
-            # TODO: Create an assembler to parse microcode and construct binary for us.
-            return
 
     def run(self):
-        #Starts the emulation
-        while (self._running):
+        while(self._running):
             if self.halted():
-                break  
-            instr = self.fetch()
-            match instr:
-                case InstructionSet.JMPZ.value | InstructionSet.JMP.value:
-                    self.instr.next_ir()
-                    self.instr.increment_pc()
-                    operand = int(self.fetch(), base=16)
-                    self.regs.write_reg("dr", operand)
-                case InstructionSet.LDAC.value | InstructionSet.STAC.value:
-                    self.instr.next_ir()
-                    self.instr.increment_pc()
-                    operand = int(self.fetch(), base=16)
-                    self.regs.write_reg("dr", operand)
-                    self.instr.next_ir()
-                    self.instr.increment_pc()
-                case _:
-                    self.instr.next_ir()
-                    self.instr.increment_pc()
-            self.instr.check_z()
-            self.execute(instr)
-        self.state() # It will print the resultant state of the emulator.
+                break
+            self.fetch()
+            self.instr.check_z() ## We need this explicitly because we don't have a wired connection from ACC to Z.
+            self.execute(hex(self.regs.read_reg("ir")))
+        self.state()
         return
 
     def halted(self):
         return self.regs.read_reg("s")
 
-    # TODO: Implement a debugger with breakpoints, with a nice command line interface.
-    # def set_breakpoint(self, index):
-    #     if len(self._instructions-1 >= index > 0):
-    #         self._instructions[index] = InstructionSet.BREAKPOINT.value
-    #     else:
-    #         print("You attempted to insert a breakpoint on an invalid instruction location.")
-    #     return
-
     def fetch(self):
-        return self._instructions[self.regs.read_reg("ir")]
+        self.regs["ar"].set_value(intVal=self.regs.read_reg("pc"), size=32)
+        self.regs["dr"].set_value(intVal=int(self.instructions[self.regs.read_reg("ar")], base=16), size=32)
+        self.regs["pc"].set_value(intVal=self.regs.read_reg("pc")+1, size=32)
+        self.regs["ir"].set_value(intVal=self.regs.read_reg("dr"), size=32)
+        self.regs["ar"].set_value(intVal=self.regs.read_reg("pc"), size=32)
 
     def state(self):
         for reg_tuple in self.regs.read_all_regs():
             print(reg_tuple)
 
-    # This will decode the instruction, execute it, and tick the IR and PC.
     def execute(self, instr):
         print(f"The instruction {instr} was executed.")
         match instr:
@@ -123,10 +89,3 @@ class RSC():
                 print(f"There was an attempt to match {instr} but it failed...")
                 self.state()
                 raise Exception
-
-
-# You can uncomment this to directly test without having to use the library.
-# if __name__ == "__main__":
-#     rsc = RSC("clear&out_test.txt", True)
-#     rsc.parse()
-#     rsc.run()
