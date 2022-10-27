@@ -25,11 +25,11 @@ class RSC():
         return self.regs.read_reg("s")
 
     def fetch(self):
-        self.regs["ar"].set_value(intVal=self.regs.read_reg("pc"), size=32)
-        self.regs["dr"].set_value(intVal=int(self.instructions[self.regs.read_reg("ar")], base=16), size=32)
-        self.regs["pc"].set_value(intVal=self.regs.read_reg("pc")+1, size=32)
-        self.regs["ir"].set_value(intVal=self.regs.read_reg("dr"), size=32)
-        self.regs["ar"].set_value(intVal=self.regs.read_reg("pc"), size=32)
+        self.regs.write_reg("ar", self.regs.read_reg("pc"))
+        self.regs.write_reg("dr", int(self.instructions[self.regs.read_reg("ar")], base=16))
+        self.instr.increment_pc()
+        self.regs.write_reg("ir", self.regs.read_reg("dr"))
+        self.regs.write_reg("ar", self.regs.read_reg("pc"))
 
     def state(self):
         for reg_tuple in self.regs.read_all_regs():
