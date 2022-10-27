@@ -4,9 +4,8 @@ import re
 
 ## IMP
 class Assembler():
-    def __init__(self, fn, output=None):
+    def __init__(self, fn):
         self.fn = fn
-        self.output = output if output is not None else fn
         self.memory_layout = {}
         self._instructions = []
         self._symbol_table = {}

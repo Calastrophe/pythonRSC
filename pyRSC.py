@@ -5,8 +5,9 @@ from pyRSC_assembler import Assembler
 class RSC():
     def __init__(self, fn:str):
         self.file = fn
+        self._assembler = Assembler(fn)
         self.regs = Registers()
-        self.instructions = Assembler(fn).memory_layout # These instructions are just a memory layout of the program.
+        self.instructions = self._assembler.memory_layout # These instructions are just a memory layout of the program.
         self.instr = InstructionDef(regs=self.regs, mem=self.instructions)
         self._running = True
 
