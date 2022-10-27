@@ -2,7 +2,6 @@ from pyRSC_def import InstructionSet
 from typing import List
 import re
 
-## IMP
 class Assembler():
     def __init__(self, fn):
         self.fn = fn
