@@ -9,7 +9,7 @@ class InstructionSet(Enum):
     HALT = '0x0'
     LDAC = '0x1'
     STAC = '0x2'
-    MVAC = '0x3'
+    MOVAC = '0x3'
     MOVR = '0x4'
     JMP = '0x5'
     JMPZ = '0x6'
@@ -23,6 +23,87 @@ class InstructionSet(Enum):
     ASHR = '0xe'
     NOT = '0xf'
 
+# The 'memory' of the RSC, this is a dictionary that uses key's inplace of addresses and values are not restricted to a certain size.
+# There is some handling here for debugger output and etc.
+class Memory():
+    def __init__(self, memory_layout):
+        self.mem_map = memory_layout
+        self._lastindex = 0
+        self._lastopcode = ""
+
+    def __getitem__(self, index) -> int:
+        if index in self.mem_map:
+            self._lastindex = index
+            return int(self.mem_map[index], base=16)
+
+    def __setitem__(self, index, value):
+        if index in self.mem_map:
+            self.mem_map[index] = hex(value)
+            self._lastindex = index
+
+    ## Display a range of instructions, used in debugger.
+    def disasm(self, begin : int, end : int):
+        for addr in range(begin, end+1):
+            try:
+                if self.mem_map[addr]:
+                    self._lastopcode = self.match_opcode(self.mem_map[addr])
+                    if self._lastindex == addr:
+                        print("IR--> ", self.convert_addr(addr), "| ", self._lastopcode)
+                    else:
+                        print("      ", self.convert_addr(addr), "| ", self._lastopcode)
+            except KeyError:
+                print("      ", self.convert_addr(addr), "|  NOP")
+
+    def convert_addr(self, addr) -> str: ## UTIL FUNC
+        return "0x"+hex(addr)[2:].zfill(8)
+
+    def match_opcode(self, value):
+        match self._lastopcode:
+            case InstructionSet.JMP.name:
+                return value
+            case InstructionSet.JMPZ.name:
+                return value
+            case InstructionSet.LDAC.name:
+                return value
+            case InstructionSet.STAC.name:
+                return value
+            case _:
+                pass
+        match value:
+            case InstructionSet.NOT.value:
+                return InstructionSet.NOT.name
+            case InstructionSet.ADD.value:
+                return InstructionSet.ADD.name
+            case InstructionSet.SUB.value:
+                return InstructionSet.SUB.name
+            case InstructionSet.LDAC.value:
+                return InstructionSet.LDAC.name
+            case InstructionSet.STAC.value:
+                return InstructionSet.STAC.name
+            case InstructionSet.INC.value:
+                return InstructionSet.INC.name
+            case InstructionSet.JMP.value:
+                return InstructionSet.JMP.name
+            case InstructionSet.JMPZ.value:
+                return InstructionSet.JMPZ.name
+            case InstructionSet.OUT.value:
+                return InstructionSet.OUT.name
+            case InstructionSet.AND.value:
+                return InstructionSet.AND.name
+            case InstructionSet.OR.value:
+                return InstructionSet.OR.name
+            case InstructionSet.ASHR.value:
+                return InstructionSet.ASHR.name
+            case InstructionSet.CLAC.value:
+                return InstructionSet.CLAC.name
+            case InstructionSet.MOVAC.value:
+                return InstructionSet.MOVAC.name
+            case InstructionSet.MOVR.value:
+                return InstructionSet.MOVR.name
+            case InstructionSet.HALT.value:
+                return InstructionSet.HALT.name
+            case _:
+                return value        
 
 
 # These are the registers of the RSC and their associated functions.
@@ -103,14 +184,14 @@ class InstructionDef():
 
     def instr_jmpz(self):
         if self.regs.read_reg("z"):
-            self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+            self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
             self.regs.write_reg("pc", self.regs.read_reg("dr"))
         else:
             self.increment_pc()
 
 
     def instr_jmp(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.regs.write_reg("pc", self.regs.read_reg("dr"))
 
     
@@ -118,22 +199,22 @@ class InstructionDef():
         self.regs.write_reg("acc", self.regs.read_reg("r"))
 
     
-    def instr_mvac(self):
+    def instr_movac(self):
         self.regs.write_reg("r", self.regs.read_reg("acc"))
     
 
     def instr_stac(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16)) ## These need to be abstracted away.
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.increment_pc()
         self.regs.write_reg("ar", self.regs.read_reg("dr"))
         self.regs.write_reg("dr", self.regs.read_reg("acc"))
         self.mem.update({self.regs.read_reg("ar"): hex(self.regs.read_reg("dr"))})
     
     def instr_ldac(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.increment_pc()
         self.regs.write_reg("ar", self.regs.read_reg("dr"))
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.regs.write_reg("acc", self.regs.read_reg("dr"))
 
     def instr_halt(self):

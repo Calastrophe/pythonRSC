@@ -1,5 +1,5 @@
 from typing import List
-from pyRSC_def import InstructionSet, Registers, InstructionDef
+from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
 from pyRSC_assembler import Assembler
 
 class RSC():
@@ -7,8 +7,8 @@ class RSC():
         self.file = fn
         self._assembler = Assembler(fn)
         self.regs = Registers()
-        self.instructions = self._assembler.memory_layout # These instructions are just a memory layout of the program.
-        self.instr = InstructionDef(regs=self.regs, mem=self.instructions)
+        self.mem = Memory(self._assembler.memory_layout) # Instructions are stored in pseudo-memory.
+        self.instr = InstructionDef(regs=self.regs, mem=self.mem)
         self._running = True
 
     def run(self):
@@ -26,7 +26,7 @@ class RSC():
 
     def fetch(self):
         self.regs.write_reg("ar", self.regs.read_reg("pc"))
-        self.regs.write_reg("dr", int(self.instructions[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.instr.increment_pc()
         self.regs.write_reg("ir", self.regs.read_reg("dr"))
         self.regs.write_reg("ar", self.regs.read_reg("pc"))
@@ -36,7 +36,7 @@ class RSC():
             print(reg_tuple)
 
     def execute(self, instr):
-        print(f"The instruction {instr} was executed.")
+        print(f"The instruction {self.mem.match_opcode(instr)} was executed.") # may be fudged by self._lastopcode in memory
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()
@@ -47,8 +47,8 @@ class RSC():
             case InstructionSet.STAC.value:
                 self.instr.instr_stac()
                 return
-            case InstructionSet.MVAC.value:
-                self.instr.instr_mvac()
+            case InstructionSet.MOVAC.value:
+                self.instr.instr_movac()
                 return
             case InstructionSet.MOVR.value:
                 self.instr.instr_movr()
