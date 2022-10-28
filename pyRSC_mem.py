@@ -91,7 +91,7 @@ class Debugger():
         self.regs = regs
         self.mem = mem
         self.instr = instr
-        self.symbol_table = sym_table ## These are so if say you input
+        self.symbol_table = sym_table ## These are for if you want to breakpoint at certain labels.
     
     def bp(self, addr):
         return
