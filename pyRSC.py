@@ -1,5 +1,6 @@
 from typing import List
-from pyRSC_def import InstructionSet, Registers, InstructionDef, Memory
+from pyRSC_def import InstructionSet, Registers, InstructionDef
+from pyRSC_mem import Memory, Debugger
 from pyRSC_assembler import Assembler
 
 class RSC():
@@ -9,13 +10,14 @@ class RSC():
         self.regs = Registers()
         self.mem = Memory(self._assembler.memory_layout) # Instructions are stored in pseudo-memory.
         self.instr = InstructionDef(regs=self.regs, mem=self.mem)
+        self.debugger = Debugger(self.regs, self.mem, self.instr, self._assembler._symbol_table)
         self._running = True
 
     def run(self):
         while(self._running):
             if self.halted():
                 break
-            self.fetch()
+            self.instr.fetch()
             self.instr.check_z() ## We need this explicitly because we don't have a wired connection from ACC to Z.
             self.execute(hex(self.regs.read_reg("ir")))
         self.state()
@@ -23,13 +25,6 @@ class RSC():
 
     def halted(self):
         return self.regs.read_reg("s")
-
-    def fetch(self):
-        self.regs.write_reg("ar", self.regs.read_reg("pc"))
-        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
-        self.instr.increment_pc()
-        self.regs.write_reg("ir", self.regs.read_reg("dr"))
-        self.regs.write_reg("ar", self.regs.read_reg("pc"))
 
     def state(self):
         for reg_tuple in self.regs.read_all_regs():
