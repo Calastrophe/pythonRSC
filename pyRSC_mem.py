@@ -92,24 +92,47 @@ class Debugger():
         self.mem = mem
         self.instr = instr
         self.symbol_table = sym_table ## These are for if you want to breakpoint at certain labels.
-    
+        self._breakpoints = {}
+        self._command = ""
+
     def bp(self, addr):
+        if addr not in self._breakpoints:
+            if addr is str:
+                self._breakpoints.update({self.symbol_table[addr]: True})
+            else:
+                self._breakpoints.update({addr: True})
+        else:
+            print("This address/label is already a breakpoint.")
         return
 
-    def disable(self, index:int):
+    def disable(self, addr):
+        if addr in self._breakpoints:
+            self._breakpoints[addr] = False
+        else:
+            print("This address/label is not a breakpoint.")
         return
 
-    def enable(self, index:int):
+    def enable(self, addr):
+        if addr in self._breakpoints:
+            self._breakpoints[addr] = True
+        else:
+            print("This address/label is not a breakpoint.")
         return
 
     def disas(self, begin:int, end:int):
+        self.mem.disasm(begin, end)
         return
 
-    def stepi(numOfSteps:int=1):
+    def stepi(self, numOfSteps:int=1):
         return
 
-    def print(type: str, reg: str):
+    def print(self, type: str, reg: str):
         return
 
-    def info(arg:str):
+    def info(self, arg:str):
         return
+
+    def check(self):
+        for breakpoint in self._breakpoints:
+            if breakpoint == self.regs.read_reg("pc"):
+                self._command = input("debug cmd: ")
