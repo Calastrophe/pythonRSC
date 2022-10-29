@@ -1,4 +1,7 @@
-from pyRSC_def import InstructionSet
+if __name__ == "__main__":
+    from pyRSC_def import InstructionSet
+else:
+    from .pyRSC_def import InstructionSet
 from typing import List
 import re
 
@@ -111,7 +114,3 @@ class Assembler():
                 matches.append((item[0],out.group(0)))
         return matches if len(matches) > 0 else None
     
-
-if __name__ == "__main__":
-    r = Assembler("tests\\tester.txt")
-    r.logisim_format("test")

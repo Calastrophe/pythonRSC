@@ -1,4 +1,7 @@
-from pyRSC_def import InstructionSet, Registers, InstructionDef
+if __name__ == "__main__":
+    from pyRSC_def import InstructionSet, Registers, InstructionDef
+else:
+    from .pyRSC_def import InstructionSet, Registers, InstructionDef
 
 ## THIS FILE IS FOR MEMORY AND DEBUGGER
 
