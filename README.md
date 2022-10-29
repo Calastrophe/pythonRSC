@@ -17,10 +17,10 @@ It is **required** that you give an output filename along with the given input f
 If you wish to use pythonRSC and its libraries, you can easily include them like so.
 
 ```py
-from pyRSC import RSC
+from pyRSC import pyRSC
 
 
-pyRSC = RSC("tests\\avg.txt")
+pyRSC = pyRSC.RSC("tests\\avg.txt")
 pyRSC.run() # Runs the given instructions and gives you an output!
 pyRSC._assembler.logisim_format("output.txt") # Logisim-formatted binary output
 pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
