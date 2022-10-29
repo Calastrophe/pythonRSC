@@ -1,0 +1,23 @@
+JMP start
+
+var1: 3D
+var2: 8F
+var3: 4E
+var4: 2E4
+
+
+start:      ; This is the average of four numbers.
+    LDAC var1
+    MOVAC
+    LDAC var2
+    ADD
+    MOVAC
+    LDAC var3
+    ADD
+    MOVAC
+    LDAC var4
+    ADD
+    ASHR
+    ASHR
+    OUT
+    HALT

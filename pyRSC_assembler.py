@@ -13,7 +13,7 @@ class Assembler():
             InstructionSet.HALT.value : "HALT",
             InstructionSet.LDAC.value : "LDAC ([^\s]+)",
             InstructionSet.STAC.value: "STAC ([^\s]+)",
-            InstructionSet.MVAC.value: "MOVAC",
+            InstructionSet.MOVAC.value: "MOVAC",
             InstructionSet.MOVR.value: "MOVR",
             InstructionSet.JMP.value: "JMP ([^\s]+)",
             InstructionSet.JMPZ.value: "JMPZ ([^\s]+)",
@@ -36,12 +36,16 @@ class Assembler():
         self.construct_mem()
 
     def obtain_matches(self):
-        with open(self.fn, "r") as file:
-            for line in file.readlines():
-                if line != '\n':
-                    match = self.match_line(line.strip())
-                    if match is not None:
-                        self._matches.append(match[0])
+        try:
+            with open(self.fn, "r") as file:
+                for line in file.readlines():
+                    if line != '\n':
+                        match = self.match_line(line.strip())
+                        if match is not None:
+                            self._matches.append(match[0])
+        except FileNotFoundError:
+            print(f"You do not have a file with the name {self.fn} in scope.")
+            exit()
 
     ## Parse the symbols and construct indices for those symbols that will end up in the instructions.
     ## JMP,JMPZ,LDAC,STAC are all "8-byte wide", essentially meaning they take up two instructions to perform, so +2 index.
@@ -94,8 +98,9 @@ class Assembler():
     # Dirty function to output in the binary format for Logisim
     def logisim_format(self, fn):
         with open(fn, "w") as file:
+            file.write("V2.0 raw\n")
             for instruction in self._instructions:
-                file.write((bin(int(instruction, base=16))[2:].zfill(32)) + "\n")
+                file.write(instruction[2:].zfill(8) + "\n")
 
     def match_line(self, line) -> List[tuple]:
         matches : List[re.Match] = []
@@ -106,4 +111,7 @@ class Assembler():
                 matches.append((item[0],out.group(0)))
         return matches if len(matches) > 0 else None
     
-    
+
+if __name__ == "__main__":
+    r = Assembler("tests\\tester.txt")
+    r.logisim_format("test")

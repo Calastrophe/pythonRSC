@@ -2,14 +2,12 @@ from enum import Enum
 from typing import List, DefaultDict
 from BitVector import BitVector
 
-
-
 # This is the instruction set of the RSC.
 class InstructionSet(Enum):
     HALT = '0x0'
     LDAC = '0x1'
     STAC = '0x2'
-    MVAC = '0x3'
+    MOVAC = '0x3'
     MOVR = '0x4'
     JMP = '0x5'
     JMPZ = '0x6'
@@ -22,8 +20,6 @@ class InstructionSet(Enum):
     OR = '0xd'
     ASHR = '0xe'
     NOT = '0xf'
-
-
 
 # These are the registers of the RSC and their associated functions.
 class Registers():
@@ -103,14 +99,14 @@ class InstructionDef():
 
     def instr_jmpz(self):
         if self.regs.read_reg("z"):
-            self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+            self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
             self.regs.write_reg("pc", self.regs.read_reg("dr"))
         else:
             self.increment_pc()
 
 
     def instr_jmp(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.regs.write_reg("pc", self.regs.read_reg("dr"))
 
     
@@ -118,22 +114,22 @@ class InstructionDef():
         self.regs.write_reg("acc", self.regs.read_reg("r"))
 
     
-    def instr_mvac(self):
+    def instr_movac(self):
         self.regs.write_reg("r", self.regs.read_reg("acc"))
     
 
     def instr_stac(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16)) ## These need to be abstracted away.
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.increment_pc()
         self.regs.write_reg("ar", self.regs.read_reg("dr"))
         self.regs.write_reg("dr", self.regs.read_reg("acc"))
-        self.mem.update({self.regs.read_reg("ar"): hex(self.regs.read_reg("dr"))})
+        self.mem.mem_map.update({self.regs.read_reg("ar"): hex(self.regs.read_reg("dr"))})
     
     def instr_ldac(self):
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.increment_pc()
         self.regs.write_reg("ar", self.regs.read_reg("dr"))
-        self.regs.write_reg("dr", int(self.mem[self.regs.read_reg("ar")], base=16))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
         self.regs.write_reg("acc", self.regs.read_reg("dr"))
 
     def instr_halt(self):
@@ -147,5 +143,12 @@ class InstructionDef():
             self.regs.reg_map["z"].set_value(intVal=1, size=1)
         else:
             self.regs.reg_map["z"].set_value(intVal=0, size=1)
+
+    def fetch(self):
+        self.regs.write_reg("ar", self.regs.read_reg("pc"))
+        self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])
+        self.increment_pc()
+        self.regs.write_reg("ir", self.regs.read_reg("dr"))
+        self.regs.write_reg("ar", self.regs.read_reg("pc"))
 
     
