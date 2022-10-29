@@ -6,12 +6,12 @@ To download the package, just use pip by ```pip install pythonRSC```
 
 After downloading the package, you can quickly test it by running through the command line.
 
-```pyRSC run tests\avg.txt```
+```pyRSC run microcode.txt```
 
 This will emulate the given microcode and expects no other inputs.
 As for the assembler, if you wish to create logisim-formatted binaries you can use the assembler command.
 
-```pyRSC assembler tests\avg.txt output.txt```
+```pyRSC assembler microcode.txt logisim_output.txt```
 
 It is **required** that you give an output filename along with the given input file.
 If you wish to use pythonRSC and its libraries, you can easily include them like so.
