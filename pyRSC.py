@@ -1,4 +1,5 @@
 from typing import List
+import sys
 from pyRSC_def import InstructionSet, Registers, InstructionDef
 from pyRSC_mem import Memory, Debugger
 from pyRSC_assembler import Assembler
@@ -14,9 +15,7 @@ class RSC():
         self._running = True
 
     def run(self):
-        while(self._running):
-            if self.halted():
-                break
+        while(not self.halted()):
             self.instr.fetch()
             self.instr.check_z() ## We need this explicitly because we don't have a wired connection from ACC to Z.
             self.execute(hex(self.regs.read_reg("ir")))
@@ -85,3 +84,21 @@ class RSC():
                 print(f"There was an attempt to match {instr} but it failed...")
                 self.state()
                 raise Exception
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if args:
+        match args[0]:
+            case "assembler":
+                asm = Assembler(args[1])
+                asm.logisim_format(args[2])
+            case "run":
+                pyRSC = RSC(args[1])
+                pyRSC.run()
+            case "help":
+                print("usage: pyRSC [run|assembler] [input] [output]\nThe assembler is used for producing logisim-formatted binaries of your microcode.\nThe run command is to emulate your given microcode file, output is not needed.")
+            case _:
+                print("usage: pyRSC [run|assembler] [input] [output]")
+    else:
+        print("usage: pyRSC [run|assembler] [input] [output]\nThe assembler is used for producing just logisim input.\nThe run command is to emulate your given microcode file, output is not needed.")

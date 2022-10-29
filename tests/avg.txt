@@ -21,4 +21,3 @@ start:      ; This is the average of four numbers.
     ASHR
     OUT
     HALT
-
