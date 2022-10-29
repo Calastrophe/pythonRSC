@@ -14,7 +14,7 @@ As for the assembler, if you wish to create logisim-formatted binaries you can u
 ```pyRSC assembler microcode.txt logisim_output.txt```
 
 It is **required** that you give an output filename along with the given input file.
-If you wish to use pyRSC and its libraries, you can easily include them like so.
+If you wish to use pyRSC and its libraries in your own python file, you can easily include them like below.
 
 ```py
 from pyRSC import pyRSC
