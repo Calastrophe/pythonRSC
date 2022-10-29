@@ -1,4 +1,4 @@
-from pyRSC import pyRSC
+from pythonRSC import pyRSC
 
 
 pyRSC = pyRSC.RSC("..\\tests\\avg.txt")
