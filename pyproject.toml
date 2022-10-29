@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pythonRSC"
+version = "0.1.3"
+authors = [
+  { name="Calastrophe", email="vmxoperation@proton.me" },
+]
+description = "An emulator for the RSC architecture written in Python."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ['BitVector']
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Calastrophe/pythonRSC"
+"Bug Tracker" = "https://github.com/Calastrophe/pythonRSC/issues"
+
+[project.scripts]
+pythonRSC = "pythonRSC.cli:main"

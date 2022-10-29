@@ -1,23 +1,31 @@
-# pyRSC ( Relatively Simple Computer in Python )
+# pythonRSC ( Relatively Simple Computer in Python )
 
-pyRSC is an emulator for the RSC architecture written in Python.
+pythonRSC is an emulator for the RSC architecture written in Python.
 
-To download the package, just use pip by ```pip install pythonRSC```
+# Installing pythonRSC
+To download the package, you can simply use pip.
 
-After downloading the package, you can quickly test it by running through the command line.
+``pip install pythonRSC``
 
-```pyRSC run tests\avg.txt```
+# Emulating your microcode using pythonRSC
+After downloading the package, you should have access to a command called 'pythonRSC'.
+To use this command, you will need a microcode file to emulate. There are some test files provided.
 
-This will emulate the given microcode and expects no other inputs.
-As for the assembler, if you wish to create logisim-formatted binaries you can use the assembler command.
+``pythonRSC run microcode.txt``
 
-```pyRSC assembler tests\avg.txt output.txt```
+This will parse the given microcode and output the state at the end of emulation.
 
-It is **required** that you give an output filename along with the given input file.
-If you wish to use pythonRSC and its libraries, you can easily include them like so.
+# Generating bytecode using pythonRSC
+If you desire to use the in-built assembler to parse the microcode into logisim bytecode, there is a command for that. You will need to provide a microcode input file and it **requires** an output file to function.
 
+``pythonRSC assembler microcode.txt output.txt``
+
+# Using pythonRSC as a library
+To use this package as a library, you can simply import the classes that you wish to use in your own python code. To learn more about those classes, you will need to read the source code. 
+
+This example shows some in-built functions inside of pythonRSC that you could use.
 ```py
-from pyRSC import RSC
+from pythonRSC import RSC
 
 
 pyRSC = RSC("tests\\avg.txt")
@@ -26,4 +34,8 @@ pyRSC._assembler.logisim_format("output.txt") # Logisim-formatted binary output
 pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
 ```
 
-The debug command is currently in development and will be documented in later versions.
+# Emulating and debugging your microcode using pythonRSC
+
+The debugger is still currently in later stages of development.
+
+Breakpoints, instruction disassembly, and control flow will all be at your fingertips soon enough.
