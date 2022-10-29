@@ -1,8 +1,7 @@
-from pyRSC import RSC
-from pyRSC_assembler import Assembler
+from pyRSC import pyRSC
 
 
-pyRSC = RSC("tests\\avg.txt")
+pyRSC = pyRSC.RSC("..\\tests\\avg.txt")
 pyRSC.run() # Runs the given instructions and gives you an output!
-pyRSC._assembler.logisim_format("output.txt")
-pyRSC.mem.disasm(0x0, 0x1F)
+pyRSC._assembler.logisim_format("output.txt") # Logisim-formatted binary output
+pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
