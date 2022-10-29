@@ -2,14 +2,28 @@
 
 pyRSC is an emulator for the RSC architecture written in Python.
 
-There is a dependency on BitVector.
-To download BitVector's package, just use **pip install BitVector**
+To download the package, just use pip by ```pip install pythonRSC```
 
-To use this simply provide a microcode file, like given in tests and run it through the pyRSC emulator.
+After downloading the package, you can quickly test it by running through the command line.
 
-![image](https://user-images.githubusercontent.com/74928681/198406038-366c4702-04d6-40c1-8bc0-2342d84c9d96.png)
+```pyRSC run tests\avg.txt```
+
+This will emulate the given microcode and expects no other inputs.
+As for the assembler, if you wish to create logisim-formatted binaries you can use the assembler command.
+
+```pyRSC assembler tests\avg.txt output.txt```
+
+It is **required** that you give an output filename along with the given input file.
+If you wish to use pythonRSC and its libraries, you can easily include them like so.
+
+```py
+from pyRSC import RSC
 
 
-You can use the assembler to output the binary format needed for Logisim, if need be.
+pyRSC = RSC("tests\\avg.txt")
+pyRSC.run() # Runs the given instructions and gives you an output!
+pyRSC._assembler.logisim_format("output.txt") # Logisim-formatted binary output
+pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
+```
 
-There is a branch for the debugger and other interfaces currently in progress.
+The debug command is currently in development and will be documented in later versions.
