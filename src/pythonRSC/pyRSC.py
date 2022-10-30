@@ -1,5 +1,4 @@
 from typing import List
-import sys
 if __name__ == "__main__":
     from pyRSC_def import InstructionSet, Registers, InstructionDef
     from pyRSC_mem import Memory, Debugger
@@ -9,21 +8,20 @@ else:
     from .pyRSC_mem import Memory, Debugger
     from .pyRSC_assembler import Assembler
 
+
 class RSC():
     def __init__(self, fn:str, debug=False):
         self.file = fn
-        self._assembler = Assembler(fn)
+        self.assembler = Assembler(fn)
         self.regs = Registers()
-        self.mem = Memory(self._assembler.memory_layout) # Instructions are stored in pseudo-memory.
+        self.mem = Memory(self.assembler.memory_layout) # Instructions are stored in pseudo-memory.
         self.instr = InstructionDef(regs=self.regs, mem=self.mem)
-        self.debugger = Debugger(self.regs, self.mem, self.instr, self._assembler._symbol_table)
+        self.debugger = Debugger(self.regs, self.mem, self.instr, self.assembler._symbol_table, self)
         self._debug = debug
-        self._running = True
 
     def run(self):
         while(not self.halted()):
             if self._debug:
-                raise NotImplementedError
                 self.debugger.check()
                 self.tick()
             else:

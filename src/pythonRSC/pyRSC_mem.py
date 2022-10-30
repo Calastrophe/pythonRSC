@@ -88,38 +88,40 @@ class Memory():
             case _:
                 return value  
 
-# This is taken after GDB debugger
 class Debugger():
-    def __init__(self, regs: Registers, mem: Memory, instr, sym_table=None):
+    def __init__(self, regs:Registers, mem:Memory, instr:InstructionDef, symbol_table, rsc_object):
         self.regs = regs
         self.mem = mem
         self.instr = instr
-        self.symbol_table = sym_table ## These are for if you want to breakpoint at certain labels.
-        self._breakpoints = {}
-        self._command = ""
+        self.symbol_table = symbol_table ## These are for if you want to breakpoint at certain labels.
+        self._breakpoints = {0:True}
+        self._command = None
+        self._parent = rsc_object
 
     def bp(self, addr):
         if addr not in self._breakpoints:
-            if addr is str:
+            if type(addr) is str and addr in self.symbol_table:
                 self._breakpoints.update({self.symbol_table[addr]: True})
-            else:
+            elif type(addr) is int:
                 self._breakpoints.update({addr: True})
+            else:
+                print(f" {addr} is not a label.")
         else:
-            print("This address/label is already a breakpoint.")
+            print(f" {addr} is already a breakpoint.")
         return
 
     def disable(self, addr):
         if addr in self._breakpoints:
             self._breakpoints[addr] = False
         else:
-            print("This address/label is not a breakpoint.")
+            print(f" {addr} is not a breakpoint.")
         return
 
     def enable(self, addr):
         if addr in self._breakpoints:
             self._breakpoints[addr] = True
         else:
-            print("This address/label is not a breakpoint.")
+            print(f" {addr} is not a breakpoint.")
         return
 
     def disas(self, begin:int, end:int):
@@ -127,15 +129,112 @@ class Debugger():
         return
 
     def stepi(self, numOfSteps:int=1):
+        for i in range(0, numOfSteps):
+            self.instr.fetch()
+            self.instr.check_z()
+            self._parent.execute(hex(self.regs.read_reg("ir")))
         return
 
     def print(self, type: str, reg: str):
+        if reg in self.regs.reg_map:
+            match type:
+                case "/d":
+                    print(self.regs.read_reg(reg))
+                    return
+                case "/x":
+                    print(hex(self.regs.read_reg(reg)))
+                    return
+                case "/t":
+                    print(bin(self.regs.read_reg(reg))[2:])
+                    return
+        else:
+            print(f" {reg} is not a register.")
         return
 
-    def info(self, arg:str):
+    def state(self):
+        self._parent.state()
         return
 
     def check(self):
         for breakpoint in self._breakpoints:
-            if breakpoint == self.regs.read_reg("pc"):
-                self._command = input("debug cmd: ")
+            if breakpoint == self.regs.read_reg("pc") and self._breakpoints[breakpoint]:
+                self.debug_handler()
+                break
+        return
+
+    def debug_handler(self):
+        self._command = input(">> ")
+        while (self._command != "run"):
+            command = self._command.split(" ")
+            arguments = command[1:]
+            match command[0]:
+                case "stepi":
+                    try:
+                        self.stepi(int(arguments[0]))
+                    except:
+                        try:
+                            self.stepi(int(arguments[0], base=16))
+                        except IndexError:
+                            self.stepi()
+                        except:
+                            print(" Invalid arguments.")
+                    pass
+                case "bp":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.bp(int(argument))
+                            except:
+                                try:
+                                    self.bp(int(argument, base=16))
+                                except:
+                                    self.bp(argument)
+                    else:
+                        print(" Invalid arguments.")
+                    pass
+                case "enable":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.enable(int(argument, base=16))
+                            except:
+                                self.enable(argument)
+                    else:
+                        print(" Invalid arguments.")
+                    pass
+                case "disable":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.disable(int(argument, base=16))
+                            except:
+                                self.disable(argument)
+                    else:
+                        print(" Invalid arguments.")
+                    pass
+                case "disas":
+                    try:
+                        self.disas(int(arguments[0]), int(arguments[1]))
+                    except:
+                        try:
+                            self.disas(int(arguments[0], base=16), int(arguments[1], base=16))
+                        except:
+                            print(" Invalid arguments.")
+                    pass
+                case "print":
+                    try:
+                        self.print(arguments[0], arguments[1])
+                    except:
+                        print(" Invalid arguments.")
+                    pass
+                case "info":
+                    self.state()
+                    pass
+                case "help":
+                    print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
+                    pass
+                case _:
+                    print(f"{self._command} is not a command.")
+                    pass
+            self._command = input(">> ")
+        return
