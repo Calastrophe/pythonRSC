@@ -56,7 +56,7 @@ The list of commands accepted by the debugger are listed below.
 
 ``disable [addr|label]`` This will turn off a breakpoint.
 
-``disas [start] [end]`` This will take a range of addresses and disassemble the instructions. Acceptable formats are hex or decimal, e.g. disas 0 50
+``disas [start] [end]`` This will take a range of addresses and disassemble the instructions. Hexadecimal or decimal.
 
 ``print [type] [reg]`` This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal)
 
