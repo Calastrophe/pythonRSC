@@ -44,7 +44,7 @@ To start the emulator with the debugger, use this command.
 
 ``pythonRSC debug microcode.txt``
 
-After executing, you will be met with a blinking >> awaiting your next command.
+After executing, you will be met with a blinking ``>>`` awaiting your next command.
 The list of commands accepted by the debugger are listed below.
 
 
