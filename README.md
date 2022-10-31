@@ -39,7 +39,22 @@ pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
 ```
 
 # Emulating and debugging your microcode using pythonRSC
+If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger.
+To start the emulator with the debugger, use this command.
 
-The debugger is still currently in later stages of development.
+``pythonRSC debug microcode.txt``
 
-Breakpoints, instruction disassembly, and control flow will all be at your fingertips soon enough.
+After executing, you will be met with a blinking >> awaiting your next command.
+The list of commands accepted by the debugger are listed below.
+``py
+stepi [stepsize] # This will 'step' forward once if stepsize is not provided, otherwise it will step as many times as provided in stepsize.
+bp [addr|label] # This will set a breakpoint at the given address in hex or decimal or at a given label. Breakpoints are enabled on initialization.
+enable [addr|label] # This will turn on a breakpoint if it was disabled.
+disable [addr|label] # This will turn off a breakpoint.
+disas [start] [end] # This will take a range of addresses and disassemble the instructions. Acceptable formats are hex or decimal, e.g. disas 0 50
+print [type] [reg] # This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal)
+info # This will print the current state of the emulator, in other words print all registers.
+help # This will just list the possible commands.
+``
+
+
