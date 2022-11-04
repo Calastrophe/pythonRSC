@@ -1,7 +1,9 @@
 if __name__ == "__main__":
     from pyRSC_def import InstructionSet, Registers, InstructionDef
+    from pyRSC_assembler import Assembler
 else:
     from .pyRSC_def import InstructionSet, Registers, InstructionDef
+    from .pyRSC_assembler import Assembler
 
 ## THIS FILE IS FOR MEMORY AND DEBUGGER
 
@@ -11,7 +13,6 @@ class Memory():
     def __init__(self, memory_layout):
         self.mem_map = memory_layout
         self._lastindex = 0
-        self._lastopcode = ""
 
     def __getitem__(self, index) -> int:
         if index in self.mem_map:
@@ -23,36 +24,122 @@ class Memory():
             self.mem_map[index] = hex(value)
             self._lastindex = index
 
-    ## Display a range of instructions, used in debugger.
-    def disasm(self, begin : int, end : int):
+    def quick_match(self, some_instr):
+        for instruction in InstructionSet:
+            if instruction.value == some_instr:
+                return instruction.name
+            else:
+                pass
+  
+class Debugger():
+    def __init__(self, regs:Registers, mem:Memory, instr:InstructionDef, rsc_object, assembler: Assembler):
+        self.regs = regs
+        self.mem = mem
+        self.instr = instr
+        self.symbol_table = assembler._symbol_table
+        self.label_table = assembler._label_table
+        self.replaced_instructions = assembler._repl_instrs
+        self._breakpoints = {0:True}
+        self._command = None
+        self._assembler = assembler
+        self._parent = rsc_object
+
+    def bp(self, addr):
+        if addr not in self._breakpoints:
+            if type(addr) is str and addr in self.symbol_table:
+                self._breakpoints.update({self.symbol_table[addr]: True})
+                print(f" There is now a breakpoint at label {addr}.")
+            elif type(addr) is int:
+                self._breakpoints.update({addr: True})
+                print(f" There is now a breakpoint at {hex(addr)}.")
+            else:
+                print(f" {addr} is not a label.")
+        else:
+            print(f" {addr} is already a breakpoint.")
+        return
+
+    def disable(self, addr):
+        if addr in self._breakpoints:
+            self._breakpoints[addr] = False
+            print(f" The breakpoint at {addr} is now disabled.")
+        else:
+            print(f" {addr} is not a breakpoint.")
+        return
+
+    def enable(self, addr):
+        if addr in self._breakpoints:
+            self._breakpoints[addr] = True
+            print(f" The breakpoint at {addr} is now enabled.")
+        else:
+            print(f" {addr} is not a breakpoint.")
+        return
+
+    def stepi(self, numOfSteps:int=1):
+        for i in range(0, numOfSteps):
+            if (not self._parent.halted()):
+                self.instr.fetch()
+                self.instr.check_z()
+                self._parent.execute(hex(self.regs.read_reg("ir")))
+            else:
+                print("The last instruction that was executed was HALT. Debugger exitted.")
+                exit()
+        return
+
+    # Internally calls disas_rang, but does figuring for what range is needed for the current label
+    def disas_curr(self):
+        position = self.regs.read_reg("pc")
+        func_label = self.determine_label(position)
+        if func_label is None: ## The position is not in a label, so just print the next ten instructions.
+            self.disas_rang(position, position+10)
+            print(" You are not inside a label, printed next ten instructions instead.")
+            return
+        label_length = self.determine_length(func_label)
+        if label_length is None: ## There is no next-label, but you are inside a label.
+            dist_to_halt = len(self._assembler._instructions[self.label_table[func_label]:])
+            end = self.label_table[func_label] + dist_to_halt
+            print(f"\n {func_label}:")
+            self.disas_rang(self.label_table[func_label], end)
+            return
+        print(f"\n {func_label}:")
+        self.disas_rang(self.label_table[func_label], (self.label_table[func_label] + label_length)-1)
+        return
+    
+    # This is a VERY lazy way to figure out what label to use, needs reworking.
+    def determine_label(self, pos):
+        potential_labels = []
+        for label in self.label_table:
+            if pos >= self.label_table[label]:
+                potential_labels.append(label)
+        if potential_labels:
+            return potential_labels[-1]
+        return None
+
+    def determine_length(self, label):
+        label_list = list(self.label_table.items())
+        cut_index = label_list.index((label, self.label_table[label]))
+        label_list = label_list[cut_index+1:] ## We want to cut out even our own label, and just determine the next_label and see if anything exists.
+        if label_list:
+            next_label = label_list[0][0]
+            return self.label_table[next_label] - self.label_table[label]
+        else:
+            return None
+            
+    def disas_rang(self, begin:int, end:int):
         for addr in range(begin, end+1):
             try:
-                if self.mem_map[addr]:
-                    self._lastopcode = self.match_opcode(self.mem_map[addr])
-                    if self._lastindex == addr:
-                        print("IR--> ", self.convert_addr(addr), "| ", self._lastopcode)
+                if self.mem.mem_map[addr]:
+                    if self.regs.read_reg('pc') == addr:
+                        print("PC--> ", self.convert_addr(addr), "| ", self.match_opcode(addr))
                     else:
-                        print("      ", self.convert_addr(addr), "| ", self._lastopcode)
+                        print("      ", self.convert_addr(addr), "| ", self.match_opcode(addr))
             except KeyError:
                 print("      ", self.convert_addr(addr), "|  NOP")
+        return
 
-    def convert_addr(self, addr) -> str: ## UTIL FUNC
-        return "0x"+hex(addr)[2:].zfill(8)
-
-    # Why all the match cases?! These are actually extremely fast, but horrible to look at...
-    def match_opcode(self, value):
-        match self._lastopcode:
-            case InstructionSet.JMP.name:
-                return value
-            case InstructionSet.JMPZ.name:
-                return value
-            case InstructionSet.LDAC.name:
-                return value
-            case InstructionSet.STAC.name:
-                return value
-            case _:
-                pass
-        match value:
+    def match_opcode(self, addr):
+        if addr in self.replaced_instructions:
+            return self.mem.mem_map[addr]
+        match self.mem.mem_map[addr]:
             case InstructionSet.NOT.value:
                 return InstructionSet.NOT.name
             case InstructionSet.ADD.value:
@@ -86,54 +173,7 @@ class Memory():
             case InstructionSet.HALT.value:
                 return InstructionSet.HALT.name
             case _:
-                return value  
-
-class Debugger():
-    def __init__(self, regs:Registers, mem:Memory, instr:InstructionDef, symbol_table, rsc_object):
-        self.regs = regs
-        self.mem = mem
-        self.instr = instr
-        self.symbol_table = symbol_table ## These are for if you want to breakpoint at certain labels.
-        self._breakpoints = {0:True}
-        self._command = None
-        self._parent = rsc_object
-
-    def bp(self, addr):
-        if addr not in self._breakpoints:
-            if type(addr) is str and addr in self.symbol_table:
-                self._breakpoints.update({self.symbol_table[addr]: True})
-            elif type(addr) is int:
-                self._breakpoints.update({addr: True})
-            else:
-                print(f" {addr} is not a label.")
-        else:
-            print(f" {addr} is already a breakpoint.")
-        return
-
-    def disable(self, addr):
-        if addr in self._breakpoints:
-            self._breakpoints[addr] = False
-        else:
-            print(f" {addr} is not a breakpoint.")
-        return
-
-    def enable(self, addr):
-        if addr in self._breakpoints:
-            self._breakpoints[addr] = True
-        else:
-            print(f" {addr} is not a breakpoint.")
-        return
-
-    def disas(self, begin:int, end:int):
-        self.mem.disasm(begin, end)
-        return
-
-    def stepi(self, numOfSteps:int=1):
-        for i in range(0, numOfSteps):
-            self.instr.fetch()
-            self.instr.check_z()
-            self._parent.execute(hex(self.regs.read_reg("ir")))
-        return
+                return self.mem.mem_map[addr]
 
     def print(self, type: str, reg: str):
         if reg in self.regs.reg_map:
@@ -147,12 +187,10 @@ class Debugger():
                 case "/t":
                     print(bin(self.regs.read_reg(reg))[2:])
                     return
+                case _:
+                    print(f" {type} is not a valid type to be displayed.")
         else:
             print(f" {reg} is not a register.")
-        return
-
-    def state(self):
-        self._parent.state()
         return
 
     def check(self):
@@ -161,6 +199,9 @@ class Debugger():
                 self.debug_handler()
                 break
         return
+
+    def convert_addr(self, addr) -> str: ## UTIL FUNC
+        return "0x"+hex(addr)[2:].zfill(8)
 
     def debug_handler(self):
         self._command = input(">> ")
@@ -178,7 +219,6 @@ class Debugger():
                             self.stepi()
                         except:
                             print(" Invalid arguments.")
-                    pass
                 case "bp":
                     if arguments:
                         for argument in arguments:
@@ -191,7 +231,6 @@ class Debugger():
                                     self.bp(argument)
                     else:
                         print(" Invalid arguments.")
-                    pass
                 case "enable":
                     if arguments:
                         for argument in arguments:
@@ -201,7 +240,6 @@ class Debugger():
                                 self.enable(argument)
                     else:
                         print(" Invalid arguments.")
-                    pass
                 case "disable":
                     if arguments:
                         for argument in arguments:
@@ -211,30 +249,29 @@ class Debugger():
                                 self.disable(argument)
                     else:
                         print(" Invalid arguments.")
-                    pass
                 case "disas":
-                    try:
-                        self.disas(int(arguments[0]), int(arguments[1]))
-                    except:
+                    if len(arguments) == 2:
                         try:
-                            self.disas(int(arguments[0], base=16), int(arguments[1], base=16))
+                            self.disas_rang(int(arguments[0]), int(arguments[1]))
                         except:
-                            print(" Invalid arguments.")
-                    pass
+                            try:
+                                self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
+                            except:
+                                print(" Invalid arguments.")
+                    elif len(arguments) == 0:
+                        self.disas_curr()
+                    else:
+                        print("Invalid arguments.")
                 case "print":
                     try:
                         self.print(arguments[0], arguments[1])
                     except:
                         print(" Invalid arguments.")
-                    pass
                 case "info":
-                    self.state()
-                    pass
+                    self._parent.state()
                 case "help":
                     print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
-                    pass
                 case _:
                     print(f"{self._command} is not a command.")
-                    pass
             self._command = input(">> ")
         return

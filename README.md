@@ -29,18 +29,18 @@ To use this package as a library, you can simply import the classes that you wis
 
 This example shows some in-built functions inside of pythonRSC that you could use.
 ```py
-from pythonRSC import RSC
+from pythonRSC import pyRSC
 
 
-pyRSC = pyRSC.RSC("tests\\avg.txt")
+pyRSC = pyRSC.RSC("..\\tests\\avg.txt")
 pyRSC.run() # Runs the given instructions and gives you an output!
-pyRSC._assembler.logisim_format("output.txt") # Logisim-formatted binary output
-pyRSC.mem.disasm(0x0, 0x1F) # Disassembly of the given instructions
+pyRSC.assembler.logisim_format("output.txt") # Logisim-formatted binary output
+pyRSC.debugger.disas_rang(0x0, 0x17) # Disassemble a range of instructions
 ```
 
 # Emulating and debugging your microcode using pythonRSC
 If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger.
-To start the emulator with the debugger, use this command.
+To start the emulator with the debugger, use this command. *This portion of the emulator is subject to change and may produce bugs, but it is usable and useful!*
 
 ``pythonRSC debug microcode.txt``
 
@@ -57,6 +57,8 @@ The list of commands accepted by the debugger are listed below.
 ``disable [addr|label]`` This will turn off a breakpoint.
 
 ``disas [start] [end]`` This will take a range of addresses and disassemble the instructions. Hexadecimal or decimal.
+
+``disas`` This variation of the disassemble command will try to identify if you are inside a label and disassemble that label for you. *This is under construction and may produce bugs.*
 
 ``print [type] [reg]`` This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal)
 

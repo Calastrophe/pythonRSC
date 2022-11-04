@@ -50,7 +50,7 @@ class Registers():
         
     def read_all_regs(self):
         for reg in self.reg_map:
-            yield (reg, self.reg_map[reg].int_val())
+            yield (reg, hex(self.reg_map[reg].int_val()))
 
 
 # Instruction declaration and definition

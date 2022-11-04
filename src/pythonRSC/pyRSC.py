@@ -16,7 +16,7 @@ class RSC():
         self.regs = Registers()
         self.mem = Memory(self.assembler.memory_layout) # Instructions are stored in pseudo-memory.
         self.instr = InstructionDef(regs=self.regs, mem=self.mem)
-        self.debugger = Debugger(self.regs, self.mem, self.instr, self.assembler._symbol_table, self)
+        self.debugger = Debugger(self.regs, self.mem, self.instr, self, self.assembler)
         self._debug = debug
 
     def run(self):
@@ -40,10 +40,10 @@ class RSC():
 
     def state(self):
         for reg_tuple in self.regs.read_all_regs():
-            print(reg_tuple)
+            print(f" {reg_tuple[0].upper() : <4} : {reg_tuple[1]}")
 
     def execute(self, instr):
-        print(f"The instruction {self.mem.match_opcode(instr)} was executed.") # may be fudged by self._lastopcode in memory
+        print(f"The instruction {self.mem.quick_match(instr)} was executed.")
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()

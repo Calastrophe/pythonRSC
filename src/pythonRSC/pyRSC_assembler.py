@@ -11,6 +11,8 @@ class Assembler():
         self.memory_layout = {}
         self._instructions = []
         self._symbol_table = {}
+        self._label_table = {}
+        self._repl_instrs = []
         self._matches = []
         self._regex_dict = { ## These are not very good regex expressions, but they get the job done. Feel free to change.
             InstructionSet.HALT.value : "HALT",
@@ -65,6 +67,7 @@ class Assembler():
                 case "LABEL":
                     split_match = match[1].split(":")
                     self._symbol_table.update({split_match[0]: index})
+                    self._label_table.update({split_match[0]: index})
                     pass
                 case InstructionSet.JMP.value | InstructionSet.JMPZ.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
                     index += 2
@@ -89,8 +92,10 @@ class Assembler():
         for count, instruction in enumerate(self._instructions): # Attach a number to each instruction
             if count in self._symbol_table: # If that number is stored in our symbol table, replace that instruction with the stored one.
                 self._instructions[count] = hex(int(self._symbol_table[count], base=16))
+                self._repl_instrs.append(count)
             elif instruction in self._symbol_table:
                 self._instructions[count] = hex(self._symbol_table[instruction])
+                self._repl_instrs.append(count)
 
 
     # Take the instructions and lay them out in memory form to be modified by ldac, stac opcodes.
@@ -101,7 +106,7 @@ class Assembler():
     # Dirty function to output in the binary format for Logisim
     def logisim_format(self, fn):
         with open(fn, "w") as file:
-            file.write("V2.0 raw\n")
+            file.write("v2.0 raw\n")
             for instruction in self._instructions:
                 file.write(instruction[2:].zfill(8) + "\n")
 
