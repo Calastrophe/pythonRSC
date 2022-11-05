@@ -42,7 +42,10 @@ class Registers():
 
     def write_reg(self, reg:str, num:int):
         if reg in self.reg_map:
-            self.reg_map[reg].set_value(intVal = num, size=self.reg_map[reg].size)
+            if reg == 'z' or reg == 's':
+                self.reg_map[reg].set_value(intVal = num % 2 ** 1, size=self.reg_map[reg].size)
+            else:
+                self.reg_map[reg].set_value(intVal = num % 2 ** 32, size=self.reg_map[reg].size)
 
     def read_reg(self, reg:str) -> int:
         if reg in self.reg_map:
