@@ -30,8 +30,8 @@ class RSC():
         return
 
     def tick(self):
-        self.instr.fetch()
         self.instr.check_z() ## We need this explicitly because we don't have a wired connection from ACC to Z.
+        self.instr.fetch()
         self.execute(hex(self.regs.read_reg("ir")))
 
 
@@ -64,7 +64,7 @@ class RSC():
                 self.instr.instr_jmp()
                 return
             case InstructionSet.JMPZ.value:
-                self.instr.instr_jmp()
+                self.instr.instr_jmpz()
                 return
             case InstructionSet.OUT.value:
                 self.instr.instr_out()
