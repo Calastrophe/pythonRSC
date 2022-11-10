@@ -18,7 +18,7 @@ class Assembler():
             InstructionSet.HALT.value : "HALT",
             InstructionSet.LDAC.value : "LDAC ([^\s]+)",
             InstructionSet.STAC.value: "STAC ([^\s]+)",
-            InstructionSet.MOVAC.value: "MOVAC",
+            InstructionSet.MVAC.value: "MVAC",
             InstructionSet.MOVR.value: "MOVR",
             InstructionSet.JMP.value: "JMP ([^\s]+)",
             InstructionSet.JMPZ.value: "JMPZ ([^\s]+)",

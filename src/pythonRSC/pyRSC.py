@@ -54,8 +54,8 @@ class RSC():
             case InstructionSet.STAC.value:
                 self.instr.instr_stac()
                 return
-            case InstructionSet.MOVAC.value:
-                self.instr.instr_movac()
+            case InstructionSet.MVAC.value:
+                self.instr.instr_mvac()
                 return
             case InstructionSet.MOVR.value:
                 self.instr.instr_movr()

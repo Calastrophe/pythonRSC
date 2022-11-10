@@ -166,8 +166,8 @@ class Debugger():
                 return InstructionSet.ASHR.name
             case InstructionSet.CLAC.value:
                 return InstructionSet.CLAC.name
-            case InstructionSet.MOVAC.value:
-                return InstructionSet.MOVAC.name
+            case InstructionSet.MVAC.value:
+                return InstructionSet.MVAC.name
             case InstructionSet.MOVR.value:
                 return InstructionSet.MOVR.name
             case InstructionSet.HALT.value:

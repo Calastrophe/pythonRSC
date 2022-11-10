@@ -7,7 +7,7 @@ class InstructionSet(Enum):
     HALT = '0x0'
     LDAC = '0x1'
     STAC = '0x2'
-    MOVAC = '0x3'
+    MVAC = '0x3'
     MOVR = '0x4'
     JMP = '0x5'
     JMPZ = '0x6'
@@ -117,7 +117,7 @@ class InstructionDef():
         self.regs.write_reg("acc", self.regs.read_reg("r"))
 
     
-    def instr_movac(self):
+    def instr_mvac(self):
         self.regs.write_reg("r", self.regs.read_reg("acc"))
     
 
