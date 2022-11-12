@@ -62,6 +62,8 @@ The list of commands accepted by the debugger are listed below.
 
 ``print [type] [reg]`` This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal)
 
+``run`` Resumes emulation unless a breakpoint is hit or HALT is met.
+
 ``info`` This will print the current state of the emulator, in other words print all registers.
 
 ``help`` This will just list the possible commands.
