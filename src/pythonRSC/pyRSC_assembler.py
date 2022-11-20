@@ -3,119 +3,79 @@ if __name__ == "__main__":
 else:
     from .pyRSC_def import InstructionSet
 from typing import List
-import re
+from enum import Enum
 
 class Assembler():
     def __init__(self, fn):
         self.fn = fn
-        self.memory_layout = {}
-        self._instructions = []
-        self._symbol_table = {}
-        self._label_table = {}
-        self._repl_instrs = []
-        self._matches = []
-        self._regex_dict = { ## These are not very good regex expressions, but they get the job done. Feel free to change.
-            InstructionSet.HALT.value : "HALT",
-            InstructionSet.LDAC.value : "LDAC ([^\s]+)",
-            InstructionSet.STAC.value: "STAC ([^\s]+)",
-            InstructionSet.MVAC.value: "MVAC",
-            InstructionSet.MOVR.value: "MOVR",
-            InstructionSet.JMP.value: "JMP ([^\s]+)",
-            InstructionSet.JMPZ.value: "JMPZ ([^\s]+)",
-            InstructionSet.OUT.value: "OUT",
-            InstructionSet.SUB.value: "SUB",
-            InstructionSet.ADD.value: "ADD",
-            InstructionSet.INC.value: "INC",
-            InstructionSet.CLAC.value: "CLAC",
-            InstructionSet.AND.value: "AND",
-            InstructionSet.OR.value: "OR",
-            InstructionSet.ASHR.value: "ASHR",
-            InstructionSet.NOT.value: "NOT",
-            "VARIABLE_ASSIGNMENT": "([^\s]+): ([^\s]+)",
-            "LABEL": "([^\s]+):"
-        }
-        self.obtain_matches()
-        self.parse_symbols()
-        self.construct_instructions()
-        self.replace_symbols()
-        self.construct_mem()
+        self.ln = 0
+        self.instructions = []
+        self.symbol_table = {}
+        self.label_table = {}
+        self.initalizer()
+        self.replaced_instructions = [count for count, instr in enumerate(self.instructions) if isinstance(instr, str)]
+        self.instructions = [self.symbol_table[instruction] if instruction in self.symbol_table.keys() else instruction for instruction in self.instructions]
+        self.memory_layout = {count:instruction for count, instruction in enumerate(self.instructions)}
 
-    def obtain_matches(self):
+
+    def initalizer(self):
         try:
             with open(self.fn, "r") as file:
                 for line in file.readlines():
-                    if line != '\n':
-                        match = self.match_line(line.strip())
-                        if match is not None:
-                            self._matches.append(match[0])
+                    self.ln += 1
+                    stripped_line = line.strip()
+                    if stripped_line:
+                        tokens : List[str] = stripped_line.replace("\t", ' ').split(' ')
+                        try:
+                            tokens = tokens[:tokens.index(";")]
+                        except:
+                            pass
+                        if tokens:
+                            self.parse_tokens(tokens)
         except FileNotFoundError:
             print(f"You do not have a file with the name {self.fn} in scope.")
             exit()
 
-    ## Parse the symbols and construct indices for those symbols that will end up in the instructions.
-    ## JMP,JMPZ,LDAC,STAC are all "8-byte wide", essentially meaning they take up two instructions to perform, so +2 index.
-    def parse_symbols(self):
-        index = 0
-        for match in self._matches:
-            match match[0]:
-                case "VARIABLE_ASSIGNMENT":
-                    split_match = match[1].split(":")
-                    self._symbol_table.update({index: split_match[1].strip()})
-                    self._symbol_table.update({split_match[0]: index})
-                    index += 1
-                    pass
-                case "LABEL":
-                    split_match = match[1].split(":")
-                    self._symbol_table.update({split_match[0]: index})
-                    self._label_table.update({split_match[0]: index})
-                    pass
-                case InstructionSet.JMP.value | InstructionSet.JMPZ.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
-                    index += 2
-                    pass
-                case _:
-                    index += 1
-                    pass
+    def converter(self, token) -> int:
+        for tType in InstructionSet:
+            if tType.name == token:
+                return tType.value
 
-    # Scaffold out the instructions with labels and variables still not changed.
-    def construct_instructions(self):
-        for match in self._matches:
-            match match[0]:
-                case "LABEL":
-                    pass
-                case InstructionSet.JMP.value | InstructionSet.JMPZ.value | InstructionSet.LDAC.value | InstructionSet.STAC.value:
-                    self._instructions.extend([match[0], match[1].split(" ")[1]]) ## We need to add the operand as the next instruction
-                case _:
-                    self._instructions.append(match[0])
+    def checker(self, token) -> bool:
+        for tType in InstructionSet:
+            if tType.name == token:
+                return True
+        return False
 
-    # Replace the stored indices with their values and replace symbols with their respective indices
-    def replace_symbols(self):
-        for count, instruction in enumerate(self._instructions): # Attach a number to each instruction
-            if count in self._symbol_table: # If that number is stored in our symbol table, replace that instruction with the stored one.
-                self._instructions[count] = hex(int(self._symbol_table[count], base=16))
-                self._repl_instrs.append(count)
-            elif instruction in self._symbol_table:
-                self._instructions[count] = hex(self._symbol_table[instruction])
-                self._repl_instrs.append(count)
-
-
-    # Take the instructions and lay them out in memory form to be modified by ldac, stac opcodes.
-    def construct_mem(self):
-        for count, instruction in enumerate(self._instructions):
-            self.memory_layout.update({count: instruction})
+    ## TODO: REFACTOR???
+    def parse_tokens(self, tokens : List[str]):
+        first_token = tokens[0]
+        if (self.checker(first_token)):
+            if first_token in ["LDAC", "STAC", "JMP", "JMPZ"]:
+                try:
+                    self.instructions.extend([self.converter(first_token), tokens[1]])
+                except IndexError:
+                    print("Invalid operand for", first_token,"at line", self.ln)
+                    exit()
+            else:
+                self.instructions.append(self.converter(first_token))
+        elif ':' in tokens[0]:
+            if len(tokens) > 1 and tokens[1] != '':
+                try:
+                    self.instructions.append(int(tokens[1], base=16))
+                except ValueError:
+                    print("Expected a hexadecimal number after declaration", tokens[0][:-1], "at line", self.ln)
+                    exit()
+            else:
+                self.label_table.update({tokens[0][:-1] : len(self.instructions)})
+            self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
+        else:
+            print("Unknown keyword", tokens[0] ,"used at line", self.ln)
+            exit()
 
     # Dirty function to output in the binary format for Logisim
     def logisim_format(self, fn):
         with open(fn, "w") as file:
             file.write("v2.0 raw\n")
-            for instruction in self._instructions:
-                file.write(instruction[2:].zfill(8) + "\n")
-
-    def match_line(self, line) -> List[tuple]:
-        matches : List[re.Match] = []
-        for item in self._regex_dict.items():
-            regex_str = item[1]
-            out = re.match(regex_str, line)
-            if out is not None:
-                matches.append((item[0],out.group(0)))
-        return matches if len(matches) > 0 else None
-    
+            for instruction in self.instructions:
+                file.write(hex(instruction)[2:].zfill(8)+"\n")

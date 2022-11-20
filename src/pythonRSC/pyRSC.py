@@ -32,7 +32,7 @@ class RSC():
     def tick(self):
         self.instr.check_z() ## We need this explicitly because we don't have a wired connection from ACC to Z.
         self.instr.fetch()
-        self.execute(hex(self.regs.read_reg("ir")))
+        self.execute(self.regs.read_reg("ir"))
 
 
     def halted(self):
@@ -43,7 +43,7 @@ class RSC():
             print(f" {reg_tuple[0].upper() : <4} : {reg_tuple[1]}")
 
     def execute(self, instr):
-        print(f"The instruction {self.mem.quick_match(instr)} was executed.")
+        print(f"The instruction {InstructionSet(instr).name} was executed.")
         match instr:
             case InstructionSet.HALT.value:
                 self.instr.instr_halt()

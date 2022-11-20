@@ -4,22 +4,22 @@ from BitVector import BitVector
 
 # This is the instruction set of the RSC.
 class InstructionSet(Enum):
-    HALT = '0x0'
-    LDAC = '0x1'
-    STAC = '0x2'
-    MVAC = '0x3'
-    MOVR = '0x4'
-    JMP = '0x5'
-    JMPZ = '0x6'
-    OUT = '0x7'
-    SUB = '0x8'
-    ADD = '0x9'
-    INC = '0xa'
-    CLAC = '0xb'
-    AND = '0xc'
-    OR = '0xd'
-    ASHR = '0xe'
-    NOT = '0xf'
+    HALT = 0
+    LDAC = 1
+    STAC = 2
+    MVAC = 3
+    MOVR = 4
+    JMP = 5
+    JMPZ = 6
+    OUT = 7
+    SUB = 8
+    ADD = 9
+    INC = 10
+    CLAC = 11
+    AND = 12
+    OR = 13
+    ASHR = 14
+    NOT = 15
 
 # These are the registers of the RSC and their associated functions.
 class Registers():
@@ -126,7 +126,7 @@ class InstructionDef():
         self.increment_pc()
         self.regs.write_reg("ar", self.regs.read_reg("dr"))
         self.regs.write_reg("dr", self.regs.read_reg("acc"))
-        self.mem.mem_map.update({self.regs.read_reg("ar"): hex(self.regs.read_reg("dr"))})
+        self.mem.mem_map.update({self.regs.read_reg("ar"): self.regs.read_reg("dr")})
     
     def instr_ldac(self):
         self.regs.write_reg("dr", self.mem[self.regs.read_reg("ar")])

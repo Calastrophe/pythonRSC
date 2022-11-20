@@ -17,28 +17,21 @@ class Memory():
     def __getitem__(self, index) -> int:
         if index in self.mem_map:
             self._lastindex = index
-            return int(self.mem_map[index], base=16)
+            return self.mem_map[index]
 
     def __setitem__(self, index, value):
         if index in self.mem_map:
-            self.mem_map[index] = hex(value)
+            self.mem_map[index] = value
             self._lastindex = index
-
-    def quick_match(self, some_instr):
-        for instruction in InstructionSet:
-            if instruction.value == some_instr:
-                return instruction.name
-            else:
-                pass
   
 class Debugger():
     def __init__(self, regs:Registers, mem:Memory, instr:InstructionDef, rsc_object, assembler: Assembler):
         self.regs = regs
         self.mem = mem
         self.instr = instr
-        self.symbol_table = assembler._symbol_table
-        self.label_table = assembler._label_table
-        self.replaced_instructions = assembler._repl_instrs
+        self.symbol_table = assembler.symbol_table
+        self.replaced_instructions = assembler.replaced_instructions
+        self.label_table = assembler.label_table
         self._breakpoints = {0:True}
         self._command = None
         self._assembler = assembler
@@ -79,7 +72,7 @@ class Debugger():
             if (not self._parent.halted()):
                 self.instr.fetch()
                 self.instr.check_z()
-                self._parent.execute(hex(self.regs.read_reg("ir")))
+                self._parent.execute(self.regs.read_reg("ir"))
             else:
                 print("The last instruction that was executed was HALT. Debugger exitted.")
                 exit()
@@ -95,7 +88,7 @@ class Debugger():
             return
         label_length = self.determine_length(func_label)
         if label_length is None: ## There is no next-label, but you are inside a label.
-            dist_to_halt = len(self._assembler._instructions[self.label_table[func_label]:])
+            dist_to_halt = len(self._assembler.instructions[self.label_table[func_label]:])
             end = self.label_table[func_label] + dist_to_halt
             print(f"\n {func_label}:")
             self.disas_rang(self.label_table[func_label], end)
@@ -136,44 +129,14 @@ class Debugger():
                 print("      ", self.convert_addr(addr), "|  NOP")
         return
 
+    ## TODO: POTENTIAL REFACTOR WITH SUBSUMING INSTRUCTIONSET() WRAPPING
     def match_opcode(self, addr):
         if addr in self.replaced_instructions:
-            return self.mem.mem_map[addr]
-        match self.mem.mem_map[addr]:
-            case InstructionSet.NOT.value:
-                return InstructionSet.NOT.name
-            case InstructionSet.ADD.value:
-                return InstructionSet.ADD.name
-            case InstructionSet.SUB.value:
-                return InstructionSet.SUB.name
-            case InstructionSet.LDAC.value:
-                return InstructionSet.LDAC.name
-            case InstructionSet.STAC.value:
-                return InstructionSet.STAC.name
-            case InstructionSet.INC.value:
-                return InstructionSet.INC.name
-            case InstructionSet.JMP.value:
-                return InstructionSet.JMP.name
-            case InstructionSet.JMPZ.value:
-                return InstructionSet.JMPZ.name
-            case InstructionSet.OUT.value:
-                return InstructionSet.OUT.name
-            case InstructionSet.AND.value:
-                return InstructionSet.AND.name
-            case InstructionSet.OR.value:
-                return InstructionSet.OR.name
-            case InstructionSet.ASHR.value:
-                return InstructionSet.ASHR.name
-            case InstructionSet.CLAC.value:
-                return InstructionSet.CLAC.name
-            case InstructionSet.MVAC.value:
-                return InstructionSet.MVAC.name
-            case InstructionSet.MOVR.value:
-                return InstructionSet.MOVR.name
-            case InstructionSet.HALT.value:
-                return InstructionSet.HALT.name
-            case _:
-                return self.mem.mem_map[addr]
+            return hex(self.mem.mem_map[addr])
+        try:
+            return InstructionSet(self.mem.mem_map[addr]).name
+        except:
+            return hex(self.mem.mem_map[addr])
 
     def print(self, type: str, reg: str):
         if reg in self.regs.reg_map:
