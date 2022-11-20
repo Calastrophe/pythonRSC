@@ -62,13 +62,14 @@ class Assembler():
         elif ':' in tokens[0]:
             if len(tokens) > 1 and tokens[1] != '':
                 try:
+                    self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
                     self.instructions.append(int(tokens[1], base=16))
                 except ValueError:
                     print("Expected a hexadecimal number after declaration", tokens[0][:-1], "at line", self.ln)
                     exit()
             else:
+                self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
                 self.label_table.update({tokens[0][:-1] : len(self.instructions)})
-            self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
         else:
             print("Unknown keyword", tokens[0] ,"used at line", self.ln)
             exit()
