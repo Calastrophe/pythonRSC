@@ -1,4 +1,4 @@
-from pyRSC import RSC
+from pythonRSC import RSC
 
 
 pyRSC = RSC("avg.txt")
