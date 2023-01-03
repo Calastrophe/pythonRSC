@@ -8,13 +8,13 @@ var4: 2E4
 
 start:      ; This is the average of four numbers.
     LDAC var1
-    MOVAC
+    MVAC
     LDAC var2
     ADD
-    MOVAC
+    MVAC
     LDAC var3
     ADD
-    MOVAC
+    MVAC
     LDAC var4
     ADD
     ASHR

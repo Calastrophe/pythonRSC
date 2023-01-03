@@ -1,0 +1,16 @@
+JMP start
+
+first_var: 222 ; This is a comment
+second_var: 0x342 ;This is another comment
+
+
+start:
+    LDAC first_var
+    INC
+    INC
+    STAC first_var
+    HALT
+second:
+    INC
+    INC
+    HALT
