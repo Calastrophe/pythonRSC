@@ -24,23 +24,9 @@ If you desire to use the in-built assembler to parse the microcode into logisim 
 
 ``pythonRSC assembler microcode.txt output.txt``
 
-# Using pythonRSC as a library
-To use this package as a library, you can simply import the classes that you wish to use in your own python code. To learn more about those classes, you will need to read the source code. 
-
-This example shows some in-built functions inside of pythonRSC that you could use.
-```py
-from pythonRSC import pyRSC
-
-
-pyRSC = pyRSC.RSC("..\\tests\\avg.txt")
-pyRSC.run() # Runs the given instructions and gives you an output!
-pyRSC.assembler.logisim_format("output.txt") # Logisim-formatted binary output
-pyRSC.debugger.disas_rang(0x0, 0x17) # Disassemble a range of instructions
-```
-
 # Emulating and debugging your microcode using pythonRSC
 If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger.
-To start the emulator with the debugger, use this command. *This portion of the emulator is subject to change and may produce bugs, but it is usable and useful!*
+To start the emulator with the debugger, use the following command.
 
 ``pythonRSC debug microcode.txt``
 
