@@ -1,5 +1,8 @@
 from typing import List, Dict
-from enumtypes import Instruction
+if __name__ == "__main__":
+    from enumtypes import Instruction
+else:
+    from .enumtypes import Instruction
 
 class Assembler():
     def __init__(self, fn):

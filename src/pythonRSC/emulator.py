@@ -1,6 +1,10 @@
 from typing import Dict, Optional
-from enumtypes import Instruction, Register, toReg
-from assembler import Assembler
+if __name__ == "__main__":
+    from assembler import Assembler
+    from enumtypes import Instruction, Register, toReg
+else:
+    from .assembler import Assembler
+    from .enumtypes import Instruction, Register, toReg
 import numpy as np
 
 

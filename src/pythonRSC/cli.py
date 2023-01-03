@@ -1,6 +1,10 @@
 import sys
-from emulator import Emulator
-from assembler import Assembler
+if __name__ == "__main__":
+    from emulator import Emulator
+    from assembler import Assembler
+else:
+    from .emulator import Emulator
+    from .assembler import Assembler
 
 def main():
     args = sys.argv[1:]
