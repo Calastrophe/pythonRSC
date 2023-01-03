@@ -36,17 +36,17 @@ The list of commands accepted by the debugger are listed below.
 
 ``stepi [stepsize]`` This will 'step' forward once if stepsize is not provided, otherwise it will step as many times as provided in stepsize
 
-``bp [addr|label]`` This will set a breakpoint at the given address in hex or decimal or at a given label. Breakpoints are enabled on initialization.
+``bp [addr|label] ...`` This will set a breakpoint at the given address(es) in hex or decimal or at given label(s). Breakpoints are enabled on initialization.
 
-``enable [addr|label]`` This will turn on a breakpoint if it was disabled.
+``enable [addr|label] ...`` This will turn on a breakpoint if it was disabled, it can take a variadic amount of breakpoints to be enabled.
 
-``disable [addr|label]`` This will turn off a breakpoint.
+``disable [addr|label] ...`` This will turn off a breakpoint, it can take a variadic amount of breakpoints to be disabled.
 
 ``disas [start] [end]`` This will take a range of addresses and disassemble the instructions. Hexadecimal or decimal.
 
-``disas`` This variation of the disassemble command will try to identify if you are inside a label and disassemble that label for you. *This is under construction and may produce bugs.*
+``disas`` This variation of the disassemble command will try to identify if you are inside a label and disassemble that label for you.
 
-``print [type] [reg]`` This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal)
+``print [type] [reg]`` This will print a register in your desired format (type). The types are /d (decimal) /t (binary) /x (hexadecimal).
 
 ``run`` Resumes emulation unless a breakpoint is hit or HALT is met.
 
