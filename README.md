@@ -22,7 +22,7 @@ This will parse the given microcode and output the state at the end of emulation
 # Generating bytecode using pythonRSC
 If you desire to use the in-built assembler to parse the microcode into logisim bytecode, there is a command for that. You will need to provide a microcode input file and it **requires** an output file to function.
 
-``pythonRSC assembler microcode.txt output.txt``
+``pythonRSC assembler microcode.txt -o output.txt``
 
 # Emulating and debugging your microcode using pythonRSC
 If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger.
