@@ -1,11 +1,11 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
+import numpy as np
 if __name__ == "__main__":
     from assembler import Assembler
     from enumtypes import Instruction, Register, toReg
 else:
     from .assembler import Assembler
     from .enumtypes import Instruction, Register, toReg
-import numpy as np
 
 
 class Emulator:
@@ -190,7 +190,8 @@ class Debugger:
         self.emulator = emulator
         self.assembler = assembler
         self._bps: Dict[int | str, bool] = {0: True}
-        self._cmd: str = None
+        self._cmd = None
+
 
     """ Initalizes a breakpoint from a label or address, if already instantiated or not a label, tell the user and return execution. """
     def bp(self, addr: int | str):
@@ -201,23 +202,23 @@ class Debugger:
             self._bps[addr] = True
             print(f" There is now a breakpoint at {hex(addr)}.")
         else:
-            print(f"The provided argument {addr} is either not a label or already a breakpoint.")
+            print(f"The provided argument {hex(addr)} is already a breakpoint or isn't a valid label.")
 
     """ Disables a present breakpoint or tells the user that it is not a present breakpoint. """
     def disable(self, addr):
         if addr in self._bps:
             self._bps[addr] = False
-            print(f" The breakpoint at {addr} is now disabled.")
+            print(f" The breakpoint at {hex(addr)} is now disabled.")
         else:
-            print(f" {addr} is not a breakpoint.")
+            print(f" {hex(addr)} is not a breakpoint.")
 
     """ Enables a present breakpoint or tells the user that it is not a present breakpoint. """
     def enable(self, addr):
         if addr in self._bps:
             self._bps[addr] = True
-            print(f" The breakpoint at {addr} is now enabled.")
+            print(f" The breakpoint at {hex(addr)} is now enabled.")
         else:
-            print(f" {addr} is not a breakpoint.")
+            print(f" {hex(addr)} is not a breakpoint.")
 
     """ Steps forward through execution numOfSteps times, if not given the default is one step. """
     def stepi(self, numOfSteps:int=1):
@@ -267,7 +268,7 @@ class Debugger:
             
     """ Disassembles a range of instructions, if the address is not instantiated yet, we will just output a NOP. ( No operation ) """
     def disas_rang(self, begin:int, end:int):
-        for addr in range(begin, end):
+        for addr in range(begin, end+1):
             if addr in self.emulator.memory.memory.keys():
                 if self.emulator.regs[Register.PC] == addr:
                     print("PC--> ", self.convert_addr(addr), "| ", self.match_opcode(addr))
@@ -315,71 +316,55 @@ class Debugger:
         while (self._cmd != "run"):
             command = self._cmd.split(" ")
             arguments = command[1:]
-            match command[0]:
-                case "stepi":
-                    try:
+            try:
+                match command[0]:
+                    case "stepi":
+                        arguments.insert(len(arguments), 1) # Nifty way to get around having to handle error
                         self.stepi(int(arguments[0]))
-                    except:
-                        try:
-                            self.stepi(int(arguments[0], base=16))
-                        except IndexError:
-                            self.stepi()
-                        except:
-                            print(" Invalid arguments.")
-                case "bp":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.bp(int(argument))
-                            except:
+                    case "bp":
+                        if arguments:
+                            for argument in arguments:
                                 try:
                                     self.bp(int(argument, base=16))
                                 except:
                                     self.bp(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "enable":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.enable(int(argument, base=16))
-                            except:
-                                self.enable(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "disable":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.disable(int(argument, base=16))
-                            except:
-                                self.disable(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "disas":
-                    if len(arguments) == 2:
-                        try:
-                            self.disas_rang(int(arguments[0]), int(arguments[1]))
-                        except:
-                            try:
-                                self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
-                            except:
-                                print(" Invalid arguments.")
-                    elif len(arguments) == 0:
-                        self.disas_curr()
-                    else:
-                        print("Invalid arguments.")
-                case "print":
-                    try:
+                        else:
+                            print(" Invalid arguments.")
+                    case "enable":
+                        if arguments:
+                            for argument in arguments:
+                                try:
+                                    self.enable(int(argument, base=16))
+                                except:
+                                    self.enable(argument)
+                        else:
+                            print(" Invalid arguments.")
+                    case "disable":
+                        if arguments:
+                            for argument in arguments:
+                                try:
+                                    self.disable(int(argument, base=16))
+                                except:
+                                    self.disable(argument)
+                        else:
+                            print(" Invalid arguments.")
+                    case "disas":
+                        if len(arguments) == 2:
+                            self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
+                        elif len(arguments) == 0:
+                            self.disas_curr()
+                        else:
+                            print(" Invalid arguments.")
+                    case "print":
                         self.print(arguments[0], arguments[1])
-                    except IndexError:
-                        print(" Invalid arguments.")
-                case "info":
-                    self.emulator.print_state()
-                case "help":
-                    print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
-                case _:
-                    print(f"{self._cmd} is not a command.")
+                    case "info":
+                        self.emulator.print_state()
+                    case "help":
+                        print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
+                    case _:
+                        print(f"{self._cmd} is not a command.")
+            except:
+                print(" Invalid arguments.")
             self._cmd = input(">> ")
         return
 
