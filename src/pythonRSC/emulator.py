@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 import numpy as np
 if __name__ == "__main__":
     from assembler import Assembler
