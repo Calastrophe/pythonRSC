@@ -1,11 +1,10 @@
 JMP start
-
 var1: 3D
 var2: 8F
 var3: 4E
 var4: 2E4
-
-
+run_flag: 1
+clear_flag: 0
 start:      ; This is the average of four numbers.
     LDAC var1
     MVAC
@@ -15,9 +14,29 @@ start:      ; This is the average of four numbers.
     LDAC var3
     ADD
     MVAC
-    LDAC var4
-    ADD
-    ASHR
-    ASHR
-    OUT
+    JMP next_block
+
+setrun:
+    LDAC clear_flag
+    STAC run_flag
+    JMP start
+
+next_block:
+    INC
+    INC
+    STAC var3
+    LDAC var3
+    INC
+    LDAC run_flag
+    JMPZ third_block
+    INC
+    INC
+    INC
+    JMP setrun
+
+third_block:
+    INC
+    INC
     HALT
+
+
