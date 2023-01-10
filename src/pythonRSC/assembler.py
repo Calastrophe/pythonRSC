@@ -1,8 +1,8 @@
 from typing import List, Dict
 if __name__ == "__main__":
-    from enumtypes import Instruction
+    from classes import Instruction
 else:
-    from .enumtypes import Instruction
+    from .classes import Instruction
 
 class Assembler():
     def __init__(self, fn):

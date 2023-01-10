@@ -1,30 +1,45 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
 if __name__ == "__main__":
     from assembler import Assembler
-    from enumtypes import Instruction, Register, toReg
+    from classes import Instruction, Register, Block, toReg
 else:
     from .assembler import Assembler
-    from .enumtypes import Instruction, Register, toReg
+    from .classes import Instruction, Register, Block, toReg
 
 
 class Emulator:
     """ The emulator constructor expects a list of instructions """
-    def __init__(self, assembler_obj: Assembler, debug_mode: bool):
+    def __init__(self, assembler_obj: Assembler, debug_mode: bool, cfg: bool):
         self.memory = Memory(assembler_obj.memory_layout)
-        self.debugger: Optional[Debugger] = Debugger(self, assembler_obj) if debug_mode else None
         self.regs = Registers()
+        self.debugger: Optional[Debugger] = Debugger(self, assembler_obj) if debug_mode else None
+        self.graph: Optional[nx.DiGraph] = nx.DiGraph() if cfg else None
+        self.setup_graph() if cfg else None
 
-    """ Starts the emulator, awaits the halt flag or otherwise told by the debugger """
+    """ A simple function to setup emulator attributes if the emulator is in debug_mode """
+    def setup_graph(self):
+        self.graph.add_node(Block(0))
+        self.curr_block: Block = [n for n in self.graph][0]
+
+    """ The start function which is executed when 'run' is used """
     def start(self):
         while (not self.halted()):
             if self.debugger:
                 self.debugger.query()
             instr : Instruction = self.fetch()
             self.check_z()
+            if self.graph:
+                self.graph_exec(instr)
             self.execute(instr)
         self.print_state()
-
+        if self.graph:
+            node_sizes = [len(str(n))*100 for n in self.graph]
+            nx.draw(self.graph, pos=nx.spring_layout(self.graph, scale=3), with_labels=True, node_size=node_sizes, font_size=6, arrowsize=10)
+            plt.show()
+        
     """ Utility function to check if halted or not """
     def halted(self) -> bool:
         return True if self.regs[Register.S] else False
@@ -55,6 +70,60 @@ class Emulator:
         self.regs[Register.IR] = self.regs[Register.DR]
         self.regs[Register.AR] = self.regs[Register.PC]
         return Instruction(self.regs[Register.IR]) # If this fails, then we have messed up!
+
+    """ A large function to keep evaluate incoming instructions and determine which block each instruction belongs. """
+    def graph_exec(self, instruction: Instruction):
+        current_address = self.regs[Register.PC] - 1
+        if current_address not in self.curr_block._block or instruction in [Instruction.JMP, Instruction.JMPZ]:
+            match instruction:
+                case Instruction.JMP:
+                    # Identify the address at which the jump is going
+                    jump_address: int = self.memory[self.regs[Register.AR]]
+                    # Does a block exist with that starting jump address?
+                    potential_block: Optional[Block] = self.query_blocks(jump_address)
+                    # If so, use that block, otherwise create a new one with that starting address
+                    next_block = potential_block if potential_block else Block(jump_address)
+                    if current_address not in self.curr_block._block:
+                        self.curr_block.add_instruction(current_address, instruction, jump_address)
+                    if not potential_block: # A node with a block starting at jump_address was not found.
+                        print(f"A new node starting at the program counter {jump_address} has been created.")
+                        self.graph.add_node(next_block)
+                    self.graph.add_edge(self.curr_block, next_block) # Connect our current block to our new one
+                    self.curr_block = next_block # Set our next block to our new current block, voila!
+                case Instruction.JMPZ:
+                    jump_address = self.memory[self.regs[Register.AR]]
+                    if self.regs[Register.Z]: # Successful jump to jump_address
+                        potential_block: Optional[Block] = self.query_blocks(jump_address) # Have we been here?
+                        next_block = potential_block if potential_block else Block(jump_address) # If not, create new block
+                        if current_address not in self.curr_block._block: # We may have already wrote the JMPZ instruction
+                            self.curr_block.add_instruction(current_address, instruction, jump_address)
+                        if not potential_block:
+                            print(f"A new node starting at the program counter {jump_address} has been created.")
+                            self.graph.add_node(next_block)
+                        self.graph.add_edge(self.curr_block, next_block)
+                        self.curr_block = next_block
+                    else: # Create a new block for the following instructions after JMPZ, (not a successful jump)
+                        next_address = self.regs[Register.PC] + 1
+                        potential_block: Optional[Block] = self.query_blocks(next_address)
+                        next_block = potential_block if potential_block else Block(next_address)
+                        if current_address not in self.curr_block._block:
+                            self.curr_block.add_instruction(current_address, instruction, jump_address)
+                        if not potential_block:
+                            print(f"A new node starting at the program counter {next_address} has been created.")
+                            self.graph.add_node(next_block)
+                        self.graph.add_edge(self.curr_block, next_block)
+                        self.curr_block = next_block
+                case Instruction.LDAC | Instruction.STAC:
+                    operand_address = self.memory[self.regs[Register.AR]]
+                    self.curr_block.add_instruction(current_address, instruction, operand_address)
+                case _:
+                    self.curr_block.add_instruction(current_address, instruction, None)
+
+    def query_blocks(self, jump_address:int) -> Optional[Block]:
+        for block in self.graph:
+            if jump_address == block._pc:
+                return block
+        return None
 
     """ The execution cycle of the emulator, matches each given instruction from fetch() """
     def execute(self, instruction: Instruction):
@@ -155,6 +224,9 @@ class Emulator:
         self.regs[Register.S] = 1
 
 
+
+
+
 """ A simple dictionary wrapper to give some sort of illusion of memory. """
 class Memory:
     def __init__(self, memory_layout: Dict[int, int]):
@@ -165,6 +237,10 @@ class Memory:
 
     def __setitem__(self, key, value):
         self.memory[key] = value
+
+
+
+
 
 """ A wrapper around an np.array of int32, allows for quick access and modification of contents """
 class Registers:
