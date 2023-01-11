@@ -54,13 +54,10 @@ class Assembler():
         if self.checker(t1):
             if t1 in ["LDAC", "STAC", "JMP", "JMPZ"]:
                 try:
-                    self.instructions.extend([self.converter(t1), int(tokens[1], 16)]) # Allows for operands to just be addresses
-                except ValueError:
-                    try:
-                        self.instructions.extend([self.converter(t1), tokens[1]]) # Named addresses
-                    except IndexError:
-                        print("Expected an operand for", t1,"at line", self.ln)
-                        exit()
+                    self.instructions.extend([self.converter(t1), tokens[1]]) # Named addresses
+                except IndexError:
+                    print("Expected an operand for", t1,"at line", self.ln)
+                    exit()
             else:
                 self.instructions.append(self.converter(t1))
         elif ':' in t1:

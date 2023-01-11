@@ -69,7 +69,7 @@ class Emulator:
         self.inc_pc()
         self.regs[Register.IR] = self.regs[Register.DR]
         self.regs[Register.AR] = self.regs[Register.PC]
-        return Instruction(self.regs[Register.IR]) # If this fails, then we have messed up!
+        return Instruction(self.regs[Register.IR]) # If you are reading this error message, you are somehow reading a non-instruction!
 
     """ A large function to keep evaluate incoming instructions and determine which block each instruction belongs. """
     def graph_exec(self, instruction: Instruction):
@@ -240,14 +240,12 @@ class Memory:
 
 
 
-
-
 """ A wrapper around an np.array of int32, allows for quick access and modification of contents """
 class Registers:
     def __init__(self):
-        self.regs = np.zeros(9, dtype=np.int32)
+        self.regs = np.zeros(9, dtype=np.uint32)
 
-    def __getitem__(self, register: Register) -> np.int32:
+    def __getitem__(self, register: Register) -> np.uint32:
         return self.regs[register.value]
 
     def __setitem__(self, register: Register, value: int): # May produce errors
