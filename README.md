@@ -64,6 +64,7 @@ To move around, use your mouse and the provided tools from the window.
 
 This feature has just been recently added in 1.0.1 and the first pass of this type of graphing.
 It was designed to help aid in finding logic errors and observe control flow.
+It will be rather laggy for any large program, I'm working on another form of control flow generation.
 
 An example graph:
 ![image](https://user-images.githubusercontent.com/74928681/211431560-8b9cee71-6017-4f6a-9c5a-82a3022e6608.png)
