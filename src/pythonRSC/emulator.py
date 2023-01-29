@@ -9,7 +9,6 @@ import pygame
 from pygame.mixer import Sound, get_init, pre_init
 pre_init(44100, -16, 1, 1024)
 pygame.init()
-
 class Note(Sound):
 
     def __init__(self, frequency, volume=.1):
@@ -31,7 +30,7 @@ class Note(Sound):
 def pluck(freq):
     n = Note(freq)
     n.play(-1)
-    sleep(0.05)
+    sleep(0.25)
     n.stop()
 
 if __name__ == "__main__":
@@ -67,9 +66,10 @@ class Emulator:
             self.execute(instr)
         self.print_state()
         if self.graph:
-            node_sizes = [len(str(n))*100 for n in self.graph]
-            nx.draw(self.graph, pos=nx.spring_layout(self.graph, scale=3), with_labels=True, node_size=node_sizes, font_size=6, arrowsize=10)
-            plt.show()
+             return nx.nx_agraph.to_agraph(self.graph).__str__()
+#            node_sizes = [len(str(n))*100 for n in self.graph]
+#            nx.draw(self.graph, pos=nx.spring_layout(self.graph, scale=3), with_labels=True, node_size=node_sizes, font_size=6, arrowsize=10)
+#            plt.show()
         
     """ Utility function to check if halted or not """
     def halted(self) -> bool:
@@ -100,7 +100,7 @@ class Emulator:
         self.inc_pc()
         self.regs[Register.IR] = self.regs[Register.DR]
         self.regs[Register.AR] = self.regs[Register.PC]
-        pluck(self.regs[Register.PC]*8)
+#pluck(self.regs[Register.PC]*8)
         return Instruction(self.regs[Register.IR]) # If you are reading this error message, you are somehow reading a non-instruction!
 
     """ A large function to keep evaluate incoming instructions and determine which block each instruction belongs. """
