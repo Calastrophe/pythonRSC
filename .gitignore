@@ -1,0 +1,4 @@
+build/*
+src/pythonRSC.egg-info/*
+src/pythonRSC/__pycache__/*
+

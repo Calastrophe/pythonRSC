@@ -1,14 +1,45 @@
+from array import array
+from time import sleep
 from typing import Dict, Optional, List
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
+
+import pygame
+from pygame.mixer import Sound, get_init, pre_init
+pre_init(44100, -16, 1, 1024)
+pygame.init()
+
+class Note(Sound):
+
+    def __init__(self, frequency, volume=.1):
+        self.frequency = frequency
+        Sound.__init__(self, self.build_samples())
+        self.set_volume(volume)
+
+    def build_samples(self):
+        period = int(round(get_init()[0] / self.frequency))
+        samples = array("h", [0] * period)
+        amplitude = 2 ** (abs(get_init()[1]) - 1) - 1
+        for time in range(period):
+            if time < period / 2:
+                samples[time] = amplitude
+            else:
+                samples[time] = -amplitude
+        return samples
+
+def pluck(freq):
+    n = Note(freq)
+    n.play(-1)
+    sleep(0.05)
+    n.stop()
+
 if __name__ == "__main__":
     from assembler import Assembler
     from classes import Instruction, Register, Block, toReg
 else:
     from .assembler import Assembler
     from .classes import Instruction, Register, Block, toReg
-
 
 class Emulator:
     """ The emulator constructor expects a list of instructions """
@@ -69,6 +100,7 @@ class Emulator:
         self.inc_pc()
         self.regs[Register.IR] = self.regs[Register.DR]
         self.regs[Register.AR] = self.regs[Register.PC]
+        pluck(self.regs[Register.PC]*8)
         return Instruction(self.regs[Register.IR]) # If you are reading this error message, you are somehow reading a non-instruction!
 
     """ A large function to keep evaluate incoming instructions and determine which block each instruction belongs. """
@@ -127,7 +159,6 @@ class Emulator:
 
     """ The execution cycle of the emulator, matches each given instruction from fetch() """
     def execute(self, instruction: Instruction):
-        print(f"The instruction {instruction.name} has been executed.")
         match instruction:
             case Instruction.HALT:
                 self._halt()
