@@ -57,15 +57,13 @@ The list of commands accepted by the debugger are listed below.
 # Generating a control flow graph for your microcode
 If you wish to generate a control flow graph from your microcode, you simply pass a flag to the CLI.
 
-``pythonRSC run microcode.txt -cfg`` or ``pythonRSC debug microcode.txt -cfg``
+``pythonRSC run microcode.txt -cfg pdf`` or ``pythonRSC debug microcode.txt -cfg png``
 
-The control flow graph will appear at the end of execution. The graph is rendered with ``matplotlib`` and ``networkx``.
-To move around, use your mouse and the provided tools from the window.
+**Graphviz is required to be downloaded and on your PATH for this to work properly.**
 
-This feature has just been recently added in 1.0.1 and the first pass of this type of graphing.
-It was designed to help aid in finding logic errors and observe control flow.
-It will be rather laggy for any large program, I'm working on another form of control flow generation.
+The control flow graph will appear at the end of execution. The graph is rendered using Graphviz and the library pythonCFG.
 
 An example graph:
-![image](https://user-images.githubusercontent.com/74928681/211431560-8b9cee71-6017-4f6a-9c5a-82a3022e6608.png)
+
+![image](https://user-images.githubusercontent.com/74928681/215967794-9511d4eb-d0f4-4e98-9bf0-9d4fd14ebd15.png)
 
