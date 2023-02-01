@@ -1,0 +1,33 @@
+JMP start
+
+test: 4
+test2: 1
+
+
+start:
+    INC
+    INC
+    LDAC test
+    INC
+    JMP new_block
+
+
+new_block:
+    INC
+    INC
+    INC
+    STAC test
+    CLAC
+    JMP end_block
+
+end_block:
+    LDAC test2
+    MVAC
+    LDAC test
+    SUB
+    STAC test
+    JMPZ end
+    JMP end_block
+
+end:
+    HALT

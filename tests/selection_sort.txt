@@ -1,0 +1,312 @@
+JMP SELECTION_SORT_START
+
+NUM0: 7		; Numbers to sort, with their flag declaring if they are in sorted or not.
+IN_SORTED_0: 1
+NUM1: 5
+IN_SORTED_1: 1
+NUM2: 4
+IN_SORTED_2: 1
+NUM3: 2
+IN_SORTED_3: 1
+HIGHBIT: 8000000
+LESSTHAN: 1
+FIRST_COMP: 0	; Flags for control flow on comparisons
+SECOND_COMP: 0
+THIRD_COMP: 0
+FOURTH_COMP: 0
+FLAG_UP: 1
+FLAG_DOWN: 0
+MIN_NUM: 4
+SORTED0: 0	; The sorted results and their flag if they are set or not yet
+SORTED0_SET: 0
+SORTED1: 0
+SORTED1_SET: 0
+SORTED2: 0
+SORTED2_SET: 0
+SORTED3: 0
+SORTED3_SET: 0
+ITERATOR: 4		; The amount of numbers to iterate over
+ABSURD_NUM: FFF	; Some absurd number to set minimum number after each loop
+H0: 1	; Handler flags for identifying NUM0,NUM1,NUM2,NUM3
+H1: 1
+H2: 1
+H3: 1
+C0: 1	; Case flags for knowning which comparison is being performed
+C1: 1
+C2: 1
+C3: 1
+
+
+SELECTION_SORT_START:
+    LDAC ITERATOR		; Check the iterator flag to see if we've done enough
+    JMPZ SELECTION_SORT_FINISHED
+    CLAC		; Clearing out the flags and general setup for each iteration
+    STAC FIRST_COMP
+    STAC SECOND_COMP
+    STAC THIRD_COMP
+    STAC FOURTH_COMP
+    LDAC ABSURD_NUM
+    STAC MIN_NUM
+    JMP FIND_MIN
+
+SELECTION_SORT_FINISHED:
+    LDAC SORTED0	; Print out the sorted results
+    OUT
+    LDAC SORTED1
+    OUT
+    LDAC SORTED2
+    OUT
+    LDAC SORTED3
+    OUT
+    HALT
+
+FIND_MIN:
+    LDAC LESSTHAN		; Finds the minimum number out of the last numbers to iterate over
+    JMPZ SET_MIN_HANDLER
+    LDAC FIRST_COMP
+    JMPZ COMPARE_FIRST
+    LDAC SECOND_COMP
+    JMPZ COMPARE_SECOND
+    LDAC THIRD_COMP
+    JMPZ COMPARE_THIRD
+    LDAC FOURTH_COMP
+    JMPZ COMPARE_FOURTH
+    JMP SET_SORTED_HANDLER
+
+REDUCE_ITERATOR:
+    LDAC FLAG_UP	; Reduces the iterator, essentially a way to do a for loop
+    MVAC
+    LDAC ITERATOR
+    SUB
+    STAC ITERATOR
+    JMP SELECTION_SORT_START
+
+SET_SORTED_HANDLER:
+    LDAC SORTED0_SET	; Put the minimum number found into a sorted index, first checks a flag to see if the sorted is set.
+    JMPZ SET_SORTED0
+    LDAC SORTED1_SET
+    JMPZ SET_SORTED1
+    LDAC SORTED2_SET
+    JMPZ SET_SORTED2
+    JMP SET_SORTED3
+
+
+
+SET_SORTED0:
+    LDAC MIN_NUM    ; Set the sorted number to the minimum number found.
+    STAC SORTED0
+    LDAC FLAG_UP
+    STAC SORTED0_SET
+    JMP IDENTIFY_NUM
+
+SET_SORTED1:
+    LDAC MIN_NUM
+    STAC SORTED1
+    LDAC FLAG_UP
+    STAC SORTED1_SET
+    JMP IDENTIFY_NUM
+
+SET_SORTED2:
+    LDAC MIN_NUM
+    STAC SORTED2
+    LDAC FLAG_UP
+    STAC SORTED2_SET
+    JMP IDENTIFY_NUM
+
+SET_SORTED3:
+    LDAC MIN_NUM
+    STAC SORTED3
+    LDAC FLAG_UP
+    STAC SORTED3_SET
+    JMP IDENTIFY_NUM
+
+
+
+IDENTIFY_NUM:
+    LDAC H0                 ; Use the H Flag to identify the number which needs to be avoided in comparison since its now in sorted.
+    JMPZ SET_INSORTED_0
+    LDAC H1
+    JMPZ SET_INSORTED_1
+    LDAC H2
+    JMPZ SET_INSORTED_2
+    LDAC H3
+    JMPZ SET_INSORTED_3
+
+SET_INSORTED_0:
+    LDAC FLAG_DOWN      ; Set the flag IN_SORTED_0 - so we know the number is already in sorted and to abort comparison.
+    STAC IN_SORTED_0
+    LDAC FLAG_UP
+    STAC H0
+    JMP REDUCE_ITERATOR
+
+SET_INSORTED_1:
+    LDAC FLAG_DOWN      
+    STAC IN_SORTED_1
+    LDAC FLAG_UP
+    STAC H1
+    JMP REDUCE_ITERATOR
+
+SET_INSORTED_2:
+    LDAC FLAG_DOWN    
+    STAC IN_SORTED_2
+    LDAC FLAG_UP
+    STAC H2
+    JMP REDUCE_ITERATOR
+
+SET_INSORTED_3:
+    LDAC FLAG_DOWN   
+    STAC IN_SORTED_3
+    LDAC FLAG_UP
+    STAC H3
+    JMP REDUCE_ITERATOR
+
+
+
+
+SET_MIN_HANDLER:
+    LDAC C0         ; Depending on which comparision we are on, we set the minimum number accordingly.
+    JMPZ SET_MIN_C0
+    LDAC C1
+    JMPZ SET_MIN_C1
+    LDAC C2
+    JMPZ SET_MIN_C2
+    LDAC C3
+    JMPZ SET_MIN_C3
+
+
+SET_MIN_C0:
+    LDAC NUM0   ; Set the minimum number to the certain number, set flags for later identification
+    STAC MIN_NUM
+    LDAC FLAG_UP
+    STAC LESSTHAN
+    STAC H1
+    STAC H2
+    STAC H3
+    LDAC FLAG_DOWN
+    STAC H0
+    JMP FIND_MIN
+
+SET_MIN_C1:
+    LDAC NUM1
+    STAC MIN_NUM
+    LDAC FLAG_UP
+    STAC LESSTHAN
+    STAC H0
+    STAC H2
+    STAC H3
+    LDAC FLAG_DOWN
+    STAC H1
+    JMP FIND_MIN
+
+SET_MIN_C2:
+    LDAC NUM2
+    STAC MIN_NUM
+    LDAC FLAG_UP
+    STAC LESSTHAN
+    STAC H0
+    STAC H1
+    STAC H3
+    LDAC FLAG_DOWN
+    STAC H2
+    JMP FIND_MIN
+
+SET_MIN_C3:
+    LDAC NUM3
+    STAC MIN_NUM
+    LDAC FLAG_UP
+    STAC LESSTHAN
+    STAC H0
+    STAC H1
+    STAC H2
+    LDAC FLAG_DOWN
+    STAC H3
+    JMP FIND_MIN
+
+
+
+COMPARE_FIRST:
+    LDAC FLAG_UP
+    STAC FIRST_COMP
+    LDAC IN_SORTED_0
+    JMPZ FIND_MIN
+    LDAC FLAG_UP
+    STAC C3
+    STAC C1
+    STAC C2
+    LDAC FLAG_DOWN
+    STAC C0
+    LDAC MIN_NUM
+    MVAC
+    LDAC NUM0
+    JMP COMPARATOR
+
+COMPARE_SECOND:
+    LDAC FLAG_UP
+    STAC SECOND_COMP
+    LDAC IN_SORTED_1
+    JMPZ FIND_MIN
+    LDAC FLAG_UP
+    STAC C0
+    STAC C3
+    STAC C2
+    LDAC FLAG_DOWN
+    STAC C1
+    LDAC MIN_NUM
+    MVAC
+    LDAC NUM1
+    JMP COMPARATOR
+
+COMPARE_THIRD:
+    LDAC FLAG_UP
+    STAC THIRD_COMP
+    LDAC IN_SORTED_2
+    JMPZ FIND_MIN
+    LDAC FLAG_UP
+    STAC C1
+    STAC C3
+    STAC C0
+    LDAC FLAG_DOWN
+    STAC C2
+    LDAC MIN_NUM
+    MVAC
+    LDAC NUM2
+    JMP COMPARATOR
+
+COMPARE_FOURTH:
+    LDAC FLAG_UP
+    STAC FOURTH_COMP
+    LDAC IN_SORTED_3
+    JMPZ FIND_MIN
+    LDAC FLAG_UP
+    STAC C0
+    STAC C1
+    STAC C2
+    LDAC FLAG_DOWN
+    STAC C3
+    LDAC MIN_NUM
+    MVAC
+    LDAC NUM3
+    JMP COMPARATOR
+
+
+
+
+COMPARATOR:
+    SUB           ; When passing to the comparator, you put B in R and A in ACC.
+    MVAC
+    LDAC HIGHBIT
+    AND
+    JMPZ OTHER_FLAG
+    JMP SET_LESSTHAN
+
+OTHER_FLAG:
+    LDAC FLAG_UP
+    STAC LESSTHAN
+    JMP FIND_MIN
+
+SET_LESSTHAN:
+    CLAC
+    STAC LESSTHAN
+    JMP FIND_MIN
+
+
