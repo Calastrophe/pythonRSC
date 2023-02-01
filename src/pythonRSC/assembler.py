@@ -11,7 +11,7 @@ class Assembler():
         self.symbol_table: Dict[str, int] = {}
         self.label_table: Dict[str, int] = {}
         self.tokenizer(fn)
-        self.replaced_instructions = [count for count, instr in enumerate(self.instructions) if isinstance(instr, str)]
+        self.replaced_instructions = {count : instr for count, instr in enumerate(self.instructions) if isinstance(instr, str)}
         self.instructions = [self.symbol_table[instruction] if instruction in self.symbol_table.keys() else instruction for instruction in self.instructions]
         self.memory_layout = {count:instruction for count, instruction in enumerate(self.instructions)}
 
