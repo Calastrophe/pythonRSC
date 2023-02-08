@@ -1,12 +1,8 @@
 from typing import Dict, Optional, List
 import numpy as np
 import pyCFG
-if __name__ == "__main__":
-    from assembler import Assembler
-    from classes import Instruction, Register, toReg
-else:
-    from .assembler import Assembler
-    from .classes import Instruction, Register, toReg
+from .assembler import Assembler
+from .classes import Instruction, Register, toReg
 
 
 class Emulator:
@@ -16,6 +12,7 @@ class Emulator:
         self.regs = Registers()
         self.assembler = assembler_obj
         self.debugger: Optional[Debugger] = Debugger(self) if debug_mode else None
+        self.engine = TimelessEngine(self) if debug_mode else None
         self.graph: pyCFG.pyCFG = pyCFG.pyCFG(0) if cfg else None
         self.out_type = cfg if cfg else None
 
@@ -25,12 +22,7 @@ class Emulator:
         while (not self.halted()):
             if self.debugger:
                 self.debugger.query()
-            instr : Instruction = self.fetch()
-            self.check_z()
-            if self.graph:
-                pyCFG_instr = self.match_instruction(instr)
-                self.graph.execute(self.regs[Register.PC]-1, pyCFG_instr)
-            self.execute(instr)
+            self.cycle()
         self.print_state()
         if self.graph:
             match self.out_type:
@@ -39,20 +31,16 @@ class Emulator:
                 case "pdf":
                     self.graph.pdf("control_flow")
 
-    def match_instruction(self, instruction: Instruction) -> pyCFG.Instruction | pyCFG.Jump:
-        match instruction:
-            case Instruction.JMP:
-                return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JMP)
-            case Instruction.JMPZ:
-                if self.check_z():
-                    return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JCC_TAKEN, int(self.regs[Register.PC]))
-                else:
-                    return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JCC_NOT_TAKEN, int(self.regs[Register.PC]))
-            case Instruction.LDAC | Instruction.STAC:
-                operand = self.assembler.replaced_instructions[self.regs[Register.PC]] if self.regs[Register.PC] in self.assembler.replaced_instructions.keys() else hex(self.memory[self.regs[Register.AR]])
-                return pyCFG.Instruction(instruction.name, operand)
-            case _:
-                return pyCFG.Instruction(instruction.name)
+    """ A wrapper function around the fetch, decode, execute cycle. """
+    def cycle(self):
+        instr : Instruction = self.fetch()
+        self.check_z()
+        if self.graph:
+            self.graph.execute(self.regs[Register.PC]-1, self.match_instruction(instr))
+        self.execute(instr)
+        if self.engine:
+            self.engine.update_state()
+
 
     """ Utility function to check if halted or not """
     def halted(self) -> bool:
@@ -184,6 +172,21 @@ class Emulator:
     def _halt(self):
         self.regs[Register.S] = 1
 
+    def match_instruction(self, instruction: Instruction) -> pyCFG.Instruction | pyCFG.Jump:
+        match instruction:
+            case Instruction.JMP:
+                return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JMP)
+            case Instruction.JMPZ:
+                if self.check_z():
+                    return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JCC_TAKEN, int(self.regs[Register.PC]))
+                else:
+                    return pyCFG.Jump(instruction.name, self.memory[self.regs[Register.AR]], pyCFG.JumpType.JCC_NOT_TAKEN, int(self.regs[Register.PC]))
+            case Instruction.LDAC | Instruction.STAC:
+                operand = self.assembler.replaced_instructions[self.regs[Register.PC]] if self.regs[Register.PC] in self.assembler.replaced_instructions.keys() else hex(self.memory[self.regs[Register.AR]])
+                return pyCFG.Instruction(instruction.name, operand)
+            case _:
+                return pyCFG.Instruction(instruction.name)
+
 
 
 
@@ -216,9 +219,34 @@ class Registers:
             self.regs[register.value] = value % 2 ** 32
 
 
+""" A rather expensive way of tracing each modification to memory and registers. """
+""" Another tactic would be to just reverse each instruction's side effect. """
+class TimelessEngine:
+    def __init__(self, emulator: Emulator):
+        self.emulator = emulator
+        self.changes: dict[int, tuple[np.ndarray, Optional[dict[int, int]] ]] = {}
+        self.previous_reg = emulator.regs.regs.copy()
+        self.previous_memory = emulator.memory.memory.copy()
+        self.trace: int = 0
 
+    def update_state(self):
+        if self.trace not in self.changes:
+            potential_difference = dict(set(self.previous_memory.items()) - set(self.emulator.memory.memory.items()))
+            difference = potential_difference if potential_difference else None
+            self.changes.update( {self.trace : (self.previous_reg, difference)} )
+            self.previous_memory = self.emulator.memory.memory.copy()
+            self.previous_reg = self.emulator.regs.regs.copy()
+        self.trace += 1
 
-## Debugger portion of the emulator, heavily under construction and optimization.
+    def go_back(self, numOfSteps=1):
+        for i in range(0, numOfSteps):
+            while (self.trace != 0):
+                self.trace -= 1
+                self.emulator.regs.regs = self.changes[self.trace][0].copy()
+                mem_changes = self.changes[self.trace][1]
+                if mem_changes:
+                    self.emulator.memory.memory.update(mem_changes)
+
 
 class Debugger:
     def __init__(self, emulator: Emulator):
@@ -259,13 +287,11 @@ class Debugger:
     def stepi(self, numOfSteps:int=1):
         for i in range(0, numOfSteps):
             if (not self.emulator.halted()):
-                instr : Instruction = self.emulator.fetch()
-                self.emulator.check_z()
-                self.emulator.execute(instr)
+                self.emulator.cycle()
             else:
                 print("The last instruction that was executed was HALT. Debugger exitted.")
                 exit()
-    
+
     """ 
         A wrapper function around disas_rang to allow for dynamic disassembly of given instructions.
         If there is no label, ten instructions will be printed.
@@ -351,55 +377,55 @@ class Debugger:
         while (self._cmd != "run"):
             command = self._cmd.split(" ")
             arguments = command[1:]
-            try:
-                match command[0]:
-                    case "stepi":
-                        arguments.insert(len(arguments), 1) # Nifty way to get around having to handle error
-                        self.stepi(int(arguments[0]))
-                    case "bp":
-                        if arguments:
-                            for argument in arguments:
-                                try:
-                                    self.bp(int(argument, base=16))
-                                except:
-                                    self.bp(argument)
-                        else:
-                            print(" Invalid arguments.")
-                    case "enable":
-                        if arguments:
-                            for argument in arguments:
-                                try:
-                                    self.enable(int(argument, base=16))
-                                except:
-                                    self.enable(argument)
-                        else:
-                            print(" Invalid arguments.")
-                    case "disable":
-                        if arguments:
-                            for argument in arguments:
-                                try:
-                                    self.disable(int(argument, base=16))
-                                except:
-                                    self.disable(argument)
-                        else:
-                            print(" Invalid arguments.")
-                    case "disas":
-                        if len(arguments) == 2:
-                            self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
-                        elif len(arguments) == 0:
-                            self.disas_curr()
-                        else:
-                            print(" Invalid arguments.")
-                    case "print":
-                        self.print(arguments[0], arguments[1])
-                    case "info":
-                        self.emulator.print_state()
-                    case "help":
-                        print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
-                    case _:
-                        print(f"{self._cmd} is not a command.")
-            except:
-                print(" Invalid arguments.")
+            match command[0]:
+                case "stepi":
+                    arguments.insert(len(arguments), 1) # Nifty way to get around having to handle error
+                    self.stepi(int(arguments[0]))
+                case "backi":
+                    arguments.insert(len(arguments), 1)
+                    self.emulator.engine.go_back(int(arguments[0]))
+                case "bp":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.bp(int(argument, base=16))
+                            except:
+                                self.bp(argument)
+                    else:
+                        print(" Invalid arguments.")
+                case "enable":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.enable(int(argument, base=16))
+                            except:
+                                self.enable(argument)
+                    else:
+                        print(" Invalid arguments.")
+                case "disable":
+                    if arguments:
+                        for argument in arguments:
+                            try:
+                                self.disable(int(argument, base=16))
+                            except:
+                                self.disable(argument)
+                    else:
+                        print(" Invalid arguments.")
+                case "disas":
+                    if len(arguments) == 2:
+                        self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
+                    elif len(arguments) == 0:
+                        self.disas_curr()
+                    else:
+                        print(" Invalid arguments.")
+                case "print":
+                    self.print(arguments[0], arguments[1])
+                case "info":
+                    self.emulator.print_state()
+                case "help":
+                    print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
+                case _:
+                    print(f"{self._cmd} is not a command.")
             self._cmd = input(">> ")
         return
 

@@ -1,11 +1,7 @@
 import sys
 import argparse
-if __name__ == "__main__":
-    from emulator import Emulator
-    from assembler import Assembler
-else:
-    from .emulator import Emulator
-    from .assembler import Assembler
+from .emulator import Emulator
+from .assembler import Assembler
 
 def main():
     parser = argparse.ArgumentParser(prog='pythonRSC', description="An emulator for the RSC architecture written in Python.")

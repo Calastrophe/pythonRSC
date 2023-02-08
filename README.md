@@ -24,8 +24,9 @@ If you desire to use the in-built assembler to parse the microcode into logisim 
 
 ``pythonRSC assemble microcode.txt -o output.txt``
 
-# Emulating and debugging your microcode using pythonRSC
-If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger.
+# Emulating and debugging your microcode (timelessly) using pythonRSC
+If you want to debug your program, pythonRSC provides an easy-to-use debugger similar to GDB Debugger, but it is timeless!
+Timeless means you can go forwards and backwards in execution, so this will prevent you having to restart the emulator chasing an issue.
 To start the emulator with the debugger, use the following command.
 
 ``pythonRSC debug microcode.txt``
@@ -34,7 +35,9 @@ After executing, you will be met with a blinking ``>>`` awaiting your next comma
 The list of commands accepted by the debugger are listed below.
 
 
-``stepi [stepsize]`` This will 'step' forward once if stepsize is not provided, otherwise it will step as many times as provided in stepsize
+``stepi [stepsize]`` This will 'step' forward once if stepsize is not provided, otherwise it will step as many times as provided in stepsize.
+
+``backi [stepsize]`` This will 'step' backwards once if stepsize is not provided, otherwise it will step as many times as provided in stepsize.
 
 ``bp [addr|label] ...`` This will set a breakpoint at the given address(es) in hex or decimal or at given label(s). Breakpoints are enabled on initialization.
 
