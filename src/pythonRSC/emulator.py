@@ -265,7 +265,10 @@ class Debugger:
             self._bps[addr] = True
             print(f" There is now a breakpoint at {hex(addr)}.")
         else:
-            print(f"The provided argument {hex(addr)} is already a breakpoint or isn't a valid label.")
+            try:
+                print(f" The provided argument {hex(addr)} is already a breakpoint or isn't a valid label.")
+            except:
+                print(f" The provided argument {addr} is already a breakpoint or isn't a valid label.")
 
     """ Disables a present breakpoint or tells the user that it is not a present breakpoint. """
     def disable(self, addr):
@@ -273,7 +276,10 @@ class Debugger:
             self._bps[addr] = False
             print(f" The breakpoint at {hex(addr)} is now disabled.")
         else:
-            print(f" {hex(addr)} is not a breakpoint.")
+            try:
+                print(f" {hex(addr)} is not a breakpoint.")
+            except:
+                print(f" {addr} is not a breakpoint.")
 
     """ Enables a present breakpoint or tells the user that it is not a present breakpoint. """
     def enable(self, addr):
@@ -281,7 +287,11 @@ class Debugger:
             self._bps[addr] = True
             print(f" The breakpoint at {hex(addr)} is now enabled.")
         else:
-            print(f" {hex(addr)} is not a breakpoint.")
+            try:
+                print(f" {hex(addr)} is not a breakpoint.")
+            except:
+                print(f" {addr} is not a breakpoint.")
+
 
     """ Steps forward through execution numOfSteps times, if not given the default is one step. """
     def stepi(self, numOfSteps:int=1):
@@ -377,55 +387,58 @@ class Debugger:
         while (self._cmd != "run"):
             command = self._cmd.split(" ")
             arguments = command[1:]
-            match command[0]:
-                case "stepi":
-                    arguments.insert(len(arguments), 1) # Nifty way to get around having to handle error
-                    self.stepi(int(arguments[0]))
-                case "backi":
-                    arguments.insert(len(arguments), 1)
-                    self.emulator.engine.go_back(int(arguments[0]))
-                case "bp":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.bp(int(argument, base=16))
-                            except:
-                                self.bp(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "enable":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.enable(int(argument, base=16))
-                            except:
-                                self.enable(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "disable":
-                    if arguments:
-                        for argument in arguments:
-                            try:
-                                self.disable(int(argument, base=16))
-                            except:
-                                self.disable(argument)
-                    else:
-                        print(" Invalid arguments.")
-                case "disas":
-                    if len(arguments) == 2:
-                        self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
-                    elif len(arguments) == 0:
-                        self.disas_curr()
-                    else:
-                        print(" Invalid arguments.")
-                case "print":
-                    self.print(arguments[0], arguments[1])
-                case "info":
-                    self.emulator.print_state()
-                case "help":
-                    print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
-                case _:
-                    print(f"{self._cmd} is not a command.")
+            try:
+                match command[0]:
+                    case "stepi":
+                        arguments.insert(len(arguments), 1) # Nifty way to get around having to handle error
+                        self.stepi(int(arguments[0]))
+                    case "backi":
+                        arguments.insert(len(arguments), 1)
+                        self.emulator.engine.go_back(int(arguments[0]))
+                    case "bp":
+                        if arguments:
+                            for argument in arguments:
+                                try:
+                                    self.bp(int(argument, base=16))
+                                except:
+                                    self.bp(argument)
+                        else:
+                            print(" Invalid arguments.")
+                    case "enable":
+                        if arguments:
+                            for argument in arguments:
+                                try:
+                                    self.enable(int(argument, base=16))
+                                except:
+                                    self.enable(argument)
+                        else:
+                            print(" Invalid arguments.")
+                    case "disable":
+                        if arguments:
+                            for argument in arguments:
+                                try:
+                                    self.disable(int(argument, base=16))
+                                except:
+                                    self.disable(argument)
+                        else:
+                            print(" Invalid arguments.")
+                    case "disas":
+                        if len(arguments) == 2:
+                            self.disas_rang(int(arguments[0], base=16), int(arguments[1], base=16))
+                        elif len(arguments) == 0:
+                            self.disas_curr()
+                        else:
+                            print(" Invalid arguments.")
+                    case "print":
+                        self.print(arguments[0], arguments[1])
+                    case "info":
+                        self.emulator.print_state()
+                    case "help":
+                        print(" Potential commands: [stepi|bp|enable|disable|disas|print|info]\n Please refer to documentation for arguments.")
+                    case _:
+                        print(f"{self._cmd} is not a command.")
+            except:
+                print(" Invalid arguments.")
             self._cmd = input(">> ")
         return
 
