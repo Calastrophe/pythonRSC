@@ -240,7 +240,7 @@ class TimelessEngine:
 
     def go_back(self, numOfSteps=1):
         for i in range(0, numOfSteps):
-            while (self.trace != 0):
+            if (self.trace != 0):
                 self.trace -= 1
                 self.emulator.regs.regs = self.changes[self.trace][0].copy()
                 mem_changes = self.changes[self.trace][1]
