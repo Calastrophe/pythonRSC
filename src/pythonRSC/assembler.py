@@ -85,7 +85,20 @@ class Assembler():
 
     """ Binary ninja formatted output """
     def bn_format(self, fn):
+        bn_format = []
+        prev_instruction = 0
+        var_indices = [x[1] for x in self.symbol_table.items() if x not in self.label_table.items()]
+        for (i, instruction) in enumerate(self.instructions):
+            if i in var_indices:
+                bn_format.append(instruction)
+            else:
+                match prev_instruction:
+                    case 1 | 2 | 5 | 6:
+                        bn_format.append(instruction * 4)
+                    case _:
+                        bn_format.append(instruction)
+                prev_instruction = instruction
         with open(fn, "wb") as file:
-            for instruction in self.instructions:
+            for instruction in bn_format:
                 assert(type(instruction) == int)
                 file.write(struct.pack("i", instruction))
