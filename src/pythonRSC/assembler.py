@@ -1,4 +1,5 @@
 from typing import List, Dict
+import struct
 from .classes import Instruction
 
 class Assembler():
@@ -81,3 +82,10 @@ class Assembler():
             file.write("v2.0 raw\n")
             for instruction in self.instructions:
                 file.write(hex(instruction)[2:].zfill(8)+"\n")
+
+    """ Binary ninja formatted output """
+    def bn_format(self, fn):
+        with open(fn, "wb") as file:
+            for instruction in self.instructions:
+                assert(type(instruction) == int)
+                file.write(struct.pack("i", instruction))
