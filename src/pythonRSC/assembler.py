@@ -5,12 +5,12 @@ from .classes import Instruction
 class Assembler():
     def __init__(self, fn):
         self.ln = 0
-        self.instructions: List[int | str] = []
+        self.opcodes: List[int | str] = []
         self.symbol_table: Dict[str, int] = {}
         self.label_table: Dict[str, int] = {}
         self.tokenizer(fn)
-        self.replaced_instructions = {count : instr for count, instr in enumerate(self.instructions) if isinstance(instr, str)}
-        self.instructions = [self.symbol_table[instruction] if instruction in self.symbol_table.keys() else instruction for instruction in self.instructions]
+        self.replaced_instructions = {count : instr for count, instr in enumerate(self.opcodes) if isinstance(instr, str)}
+        self.instructions = [self.symbol_table[instruction] if instruction in self.symbol_table.keys() else instruction for instruction in self.opcodes]
         self.memory_layout = {count:instruction for count, instruction in enumerate(self.instructions)}
 
 
@@ -44,7 +44,7 @@ class Assembler():
 
 
     """ 
-        Parses the given tokens from each line and generates a scaffolding of instructions stored in self.instructions 
+        Parses the given tokens from each line and generates a scaffolding of instructions stored in self.opcodes 
         Additionally, the function fills symbol table and label table for later use and replacement.
     """
     def parse_tokens(self, tokens: List[str]):
@@ -52,23 +52,23 @@ class Assembler():
         if self.checker(t1):
             if t1 in ["LDAC", "STAC", "JMP", "JMPZ"]:
                 try:
-                    self.instructions.extend([self.converter(t1), tokens[1]]) # Named addresses
+                    self.opcodes.extend([self.converter(t1), tokens[1]]) # Named addresses
                 except IndexError:
                     print("Expected an operand for", t1,"at line", self.ln)
                     exit()
             else:
-                self.instructions.append(self.converter(t1))
+                self.opcodes.append(self.converter(t1))
         elif ':' in t1:
             if len(tokens) > 1 and tokens[1] != '':
                 try:
-                    self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
-                    self.instructions.append(int(tokens[1], base=16))
+                    self.symbol_table.update({tokens[0][:-1] : len(self.opcodes)})
+                    self.opcodes.append(int(tokens[1], base=16))
                 except ValueError:
                     print("Expected a hexadecimal number after declaration", tokens[0][:-1], "at line", self.ln)
                     exit()
             else:
-                self.symbol_table.update({tokens[0][:-1] : len(self.instructions)})
-                self.label_table.update({tokens[0][:-1] : len(self.instructions)})
+                self.symbol_table.update({tokens[0][:-1] : len(self.opcodes)})
+                self.label_table.update({tokens[0][:-1] : len(self.opcodes)})
         elif ';' in t1:
             pass
         else:
@@ -84,20 +84,9 @@ class Assembler():
                 file.write(hex(instruction)[2:].zfill(8)+"\n")
 
     """ Binary ninja formatted output """
+    " The most amazing refactor happened here, you gotta check the commit history to believe it. "
     def bn_format(self, fn):
-        bn_format = []
-        prev_instruction = 0
-        var_indices = [x[1] for x in self.symbol_table.items() if x not in self.label_table.items()]
-        for (i, instruction) in enumerate(self.instructions):
-            if i in var_indices:
-                bn_format.append(instruction)
-            else:
-                match prev_instruction:
-                    case 1 | 2 | 5 | 6:
-                        bn_format.append(instruction * 4)
-                    case _:
-                        bn_format.append(instruction)
-                prev_instruction = instruction
+        bn_format = [self.symbol_table[instruction]*4 if instruction in self.symbol_table.keys() else instruction for instruction in self.opcodes]
         with open(fn, "wb") as file:
             for instruction in bn_format:
                 assert(type(instruction) == int)
