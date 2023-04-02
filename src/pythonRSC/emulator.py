@@ -258,7 +258,7 @@ class Debugger:
 
     """ Initalizes a breakpoint from a label or address, if already instantiated or not a label, tell the user and return execution. """
     def bp(self, addr: int | str):
-        if isinstance(addr, str) and addr in self.assembler.symbol_table and self.assembler.symbol_table[addr] not in self._bps:
+        if isinstance(addr, str) and addr in self.assembler.symbol_table and self.assembler.symbol_table[addr] not in self._bps.keys():
             self._bps[self.assembler.symbol_table[addr]] = True
             print(f" There is now a breakpoint at label {addr}.")
         elif isinstance(addr, int) and addr not in self._bps.keys():
@@ -275,6 +275,9 @@ class Debugger:
         if addr in self._bps:
             self._bps[addr] = False
             print(f" The breakpoint at {hex(addr)} is now disabled.")
+        elif self.assembler.symbol_table[addr] in self._bps:
+            self._bps[self.assembler.symbol_table[addr]] = False
+            print(f" The breakpoint at {addr} is now disabled.")
         else:
             try:
                 print(f" {hex(addr)} is not a breakpoint.")
@@ -286,6 +289,9 @@ class Debugger:
         if addr in self._bps:
             self._bps[addr] = True
             print(f" The breakpoint at {hex(addr)} is now enabled.")
+        elif self.assembler.symbol_table[addr] in self._bps:
+            self._bps[self.assembler.symbol_table[addr]] = True
+            print(f" The breakpoint at {addr} is now enabled.")
         else:
             try:
                 print(f" {hex(addr)} is not a breakpoint.")
