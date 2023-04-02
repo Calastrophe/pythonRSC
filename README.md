@@ -6,6 +6,8 @@ pythonRSC is an emulator for the RSC architecture written in Python.
 With this program, you can generate bytecode from microcode files for Logisim or just emulate microcode files out right.
 Additionally, you can debug your program and see its every step or even generate a control flow graph of your emulated program.
 
+## [Introduction Video](https://youtu.be/cA685cUVUHM)
+
 # Installing pythonRSC
 To download the package, you can simply use pip.
 
