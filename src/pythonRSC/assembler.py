@@ -62,7 +62,11 @@ class Assembler():
             if len(tokens) > 1 and tokens[1] != '':
                 try:
                     self.symbol_table.update({tokens[0][:-1] : len(self.opcodes)})
-                    self.opcodes.append(int(tokens[1], base=16))
+                    righthand_side: int = int(tokens[1], base=16)
+                    self.opcodes.append(righthand_side)
+                    if righthand_side < 0:
+                        print("Unexpected negative sign before hexadecimal number", tokens[1][1:], "at line", self.ln)
+                        exit()
                 except ValueError:
                     print("Expected a hexadecimal number after declaration", tokens[0][:-1], "at line", self.ln)
                     exit()
