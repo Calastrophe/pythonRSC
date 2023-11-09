@@ -98,13 +98,16 @@ If you want to debug your program, pythonRSC provides an easy-to-use timeless de
 
 The timeless part means that you can go forwards and backwards in execution, thereby relieving you of having to restart the emulator to chase an issue with your program.
 
+<br />
+
 To start the emulator with the debugger, use the following command.
 
 ``pythonRSC debug program_code.txt``
 
+<br />
+
 After executing, you will be met with a ``>>`` awaiting your next command.
 The list of commands accepted by the debugger are listed below.
-
 
 ``stepi [stepsize]`` This will 'step' forward once if stepsize is not provided, otherwise it will step as many times as provided in stepsize.
 
