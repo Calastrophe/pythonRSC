@@ -79,6 +79,7 @@ To download the package, you can simply use pip.
 
 # Emulating your program using pythonRSC
 After downloading the package, you should have access to a command called 'pythonRSC'.
+
 To use this command, you will need a program file to emulate. There are some test files provided.
 
 ``pythonRSC run program_code.txt``
@@ -86,13 +87,17 @@ To use this command, you will need a program file to emulate. There are some tes
 This will parse the given program file, emulate it and output the state at the end of emulation.
 
 # Generating bytecode using pythonRSC
-If you desire to use the in-built assembler to parse the program file into logisim bytecode, there is a command for that. You will need to provide a program file and specify a **required** output file name.
+If you desire to use the in-built assembler to parse the program file into logisim bytecode, there is a command for that.
+
+You will need to provide a program file and specify a **required** output file name.
 
 ``pythonRSC assemble program_code.txt -o bytecode.txt``
 
 # Emulating and debugging your program (timelessly) using pythonRSC
 If you want to debug your program, pythonRSC provides an easy-to-use timeless debugger similar to [GDB Debugger](https://en.wikipedia.org/wiki/GNU_Debugger).
+
 The timeless part means that you can go forwards and backwards in execution, thereby relieving you of having to restart the emulator to chase an issue with your program.
+
 To start the emulator with the debugger, use the following command.
 
 ``pythonRSC debug program_code.txt``
