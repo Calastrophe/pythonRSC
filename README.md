@@ -66,7 +66,7 @@ There are [sixteen instructions](https://github.com/Calastrophe/pythonRSC/blob/d
 
 [`OR`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L120-L121): Performs a bitwise OR of `ACC` and `R`, storing the result in `ACC`.
 
-[`ASHR`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L117-L118): Performs an [arithmetic left shift](https://open4tech.com/logical-vs-arithmetic-shift/) by 1 on `ACC`.
+[`ASHR`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L117-L118): Performs an [arithmetic right shift](https://open4tech.com/logical-vs-arithmetic-shift/) by 1 on `ACC`.
 
 [`NOT`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L114-L115): Performs a bitwise NOT on `ACC`.
 
