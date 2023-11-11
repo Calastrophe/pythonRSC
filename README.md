@@ -56,7 +56,7 @@ There are [sixteen instructions](https://github.com/Calastrophe/pythonRSC/blob/d
 
 [`SUB`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L135-L136): Subtracts the current value in `R` from `ACC`, storing it in `ACC`.
 
-[`ADD`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L132-L133): Adds the current value in `R` from `ACC`, storing it in `ACC`.
+[`ADD`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L132-L133): Adds the current value in `R` to `ACC`, storing it in `ACC`.
 
 [`INC`](https://github.com/Calastrophe/pythonRSC/blob/d76b2f449544e0a7d158a170583592e87b93894a/src/pythonRSC/emulator.py#L129-L130): Increments the current value in `ACC` by 1.
 
